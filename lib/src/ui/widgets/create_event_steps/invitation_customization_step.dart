@@ -5,7 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:io'; // For File
 
 class InvitationCustomizationStep extends StatefulWidget {
-  const InvitationCustomizationStep({super.key});
+  const InvitationCustomizationStep({super.key, required this.formKey});
+
+  final GlobalKey<FormState> formKey;
 
   @override
   State<InvitationCustomizationStep> createState() => _InvitationCustomizationStepState();
@@ -40,7 +42,9 @@ class _InvitationCustomizationStepState extends State<InvitationCustomizationSte
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
+      body: Form(
+        key: widget.formKey,
+        child: Column(
         children: [
           Expanded(
             child: Stack(
@@ -72,11 +76,11 @@ class _InvitationCustomizationStepState extends State<InvitationCustomizationSte
                     left: _imagePosition.dx,
                     top: _imagePosition.dy,
                     child: GestureDetector(
-                      onPanUpdate: (details) {
-                        setState(() {
-                          _imagePosition += details.delta;
-                        });
-                      },
+                      // onPanUpdate: (details) {
+                      //   setState(() {
+                      //     _imagePosition += details.delta;
+                      //   });
+                      // },
                       onScaleUpdate: (details) {
                         setState(() {
                           _imageScale = details.scale;
@@ -84,10 +88,16 @@ class _InvitationCustomizationStepState extends State<InvitationCustomizationSte
                       },
                       child: Transform.scale(
                         scale: _imageScale,
-                        child: Image.file(
-                          File(_pickedImage!.path),
-                          width: 150, // Base width for scaling
-                          height: 150, // Base height for scaling
+                        // child: Image.file(
+                        //   File(_pickedImage!.path),
+                        //   width: 150, // Base width for scaling
+                        //   height: 150, // Base height for scaling
+                        //   fit: BoxFit.contain,
+                        // ),
+                        child: Image.network(
+                          'https://www.mrsfields.com/cdn/shop/articles/happy-birthday-pink-background.jpg?v=1704506345',
+                          width: 150,
+                          height: 150,
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -176,6 +186,7 @@ class _InvitationCustomizationStepState extends State<InvitationCustomizationSte
           ),
         ],
       ),
+      )
     );
   }
 }

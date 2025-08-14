@@ -48,6 +48,7 @@ class GuestListSelectionScreenState extends State<GuestListSelectionScreen> {
         builder: (context) => GuestListReviewScreen(initialGuests: _currentGuests),
       ),
     );
+  }
 
   @override
   Widget build(BuildContext context) {

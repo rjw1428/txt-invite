@@ -3,7 +3,7 @@ import 'package:txt_invite/src/interfaces/event_service.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/guest_list.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
-import 'package:txt_invite/src/utils/functions.dart';
+
 
 class FirebaseEventService implements EventService {
 
@@ -69,7 +69,6 @@ class FirebaseEventService implements EventService {
     }
 
     final guestData = {'id': event.guestListId, ...guestDoc.data()!};
-    print(guestData);
     final guests = GuestList.fromMap(guestData).guests;
     try {
       final guest = guests.firstWhere((guest) => guest.id == guestId);
@@ -83,11 +82,9 @@ class FirebaseEventService implements EventService {
         await eventRef.update({
           'rsvps': FieldValue.arrayRemove([currentRsvps.firstWhere((r) => r.id == guestId).toMap()])
         });
-    
-
-      await eventRef.update({
-        'rsvps': FieldValue.arrayUnion([rsvp.toMap()])
-      });
     }
+    await eventRef.update({
+      'rsvps': FieldValue.arrayUnion([rsvp.toMap()])
+    });
   }
 }

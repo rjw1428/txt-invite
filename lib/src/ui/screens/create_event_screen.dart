@@ -171,7 +171,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         });
                       },
                     ),
-                    const InvitationCustomizationStep(),
+                    InvitationCustomizationStep(
+                      formKey: _formKeys[2],
+                    ),
                     GuestListManagementStep(
                       formKey: _formKeys[3],
                       onGuestListSelected: (guestListId) {
