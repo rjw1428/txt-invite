@@ -2,6 +2,7 @@ enum RsvpStatus {
   attending,
   notAttending,
   maybe,
+  pending
 }
 
 class Rsvp {

@@ -9,10 +9,10 @@ class AddEditGuestScreen extends StatefulWidget {
   const AddEditGuestScreen({super.key, this.guest, required this.onSave});
 
   @override
-  _AddEditGuestScreenState createState() => _AddEditGuestScreenState();
+  AddEditGuestScreenState createState() => AddEditGuestScreenState();
 }
 
-class _AddEditGuestScreenState extends State<AddEditGuestScreen> {
+class AddEditGuestScreenState extends State<AddEditGuestScreen> {
   final _formKey = GlobalKey<FormState>();
   late String _firstName;
   late String _lastName;

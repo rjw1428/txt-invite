@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:txt_invite/src/models/guest.dart';
-import 'package:txt_invite/src/models/guest_list.dart';
+
 
 class GuestListReviewScreen extends StatefulWidget {
   final List<Guest> initialGuests;

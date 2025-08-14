@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:txt_invite/src/interfaces/event_service.dart';
 import 'package:txt_invite/src/models/event.dart';
+import 'package:txt_invite/src/models/guest_list.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
+import 'package:txt_invite/src/utils/functions.dart';
 
 class FirebaseEventService implements EventService {
 
@@ -58,23 +60,29 @@ class FirebaseEventService implements EventService {
       throw Exception('Event not found');
     }
 
-    final guestListId = Event.fromMap(eventDoc.data()!).guestListId;
-    final guestRef = _firestore.collection('guest_lists').doc(guestListId).collection('guests').doc(guestId);
+    final eventData = {'id': eventId, ...eventDoc.data()!};
+    final event = Event.fromMap(eventData);
+    final guestRef = _firestore.collection('guest_lists').doc(event.guestListId);
     final guestDoc = await guestRef.get();
-
     if (!guestDoc.exists) {
-      throw Exception('Guest not found');
+      throw Exception('Guest List not found');
+    }
+
+    final guestData = {'id': event.guestListId, ...guestDoc.data()!};
+    print(guestData);
+    final guests = GuestList.fromMap(guestData).guests;
+    try {
+      final guest = guests.firstWhere((guest) => guest.id == guestId);
+    } catch (e) {
+      throw Exception('Guest not found in Guest List');
     }
 
     // If guestId is already in the rsvps, remove it before adding
-    final currentRsvps = eventDoc.data()!['rsvps'];
-    if (currentRsvps != null) {
-      final existingRsvps = (currentRsvps as List).map((e) => Rsvp.fromMap(e)).toList();
-      if (existingRsvps.any((r) => r.id == guestId)) {
+    final currentRsvps = event.rsvps;
+    if (currentRsvps.any((r) => r.id == guestId)) {
         await eventRef.update({
-          'rsvps': FieldValue.arrayRemove([existingRsvps.firstWhere((r) => r.id == guestId).toMap()])
+          'rsvps': FieldValue.arrayRemove([currentRsvps.firstWhere((r) => r.id == guestId).toMap()])
         });
-      }
     
 
       await eventRef.update({

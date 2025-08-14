@@ -18,7 +18,6 @@ class _ManualGuestEntryScreenState extends State<ManualGuestEntryScreen> {
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
-    _phoneNumberController.dispose();
     super.dispose();
   }
 
@@ -35,46 +34,58 @@ class _ManualGuestEntryScreenState extends State<ManualGuestEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Guest Manually'),
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 16.0,
+        right: 16.0,
+        top: 16.0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _firstNameController,
-                decoration: const InputDecoration(labelText: 'First Name'),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Add Guest Manually',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 20),
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _firstNameController,
+                    decoration: const InputDecoration(labelText: 'First Name'),
+                  ),
+                  TextFormField(
+                    controller: _lastNameController,
+                    decoration: const InputDecoration(labelText: 'Last Name'),
+                  ),
+                  TextFormField(
+                    controller: _phoneNumberController,
+                    decoration: const InputDecoration(labelText: 'Phone Number'),
+                    keyboardType: TextInputType.phone,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a phone number';
+                      }
+                      // Basic phone number validation (can be improved)
+                      if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
+                        return 'Please enter a valid phone number';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _addGuest,
+                    child: const Text('Add Guest'),
+                  ),
+                ],
               ),
-              TextFormField(
-                controller: _lastNameController,
-                decoration: const InputDecoration(labelText: 'Last Name'),
-              ),
-              TextFormField(
-                controller: _phoneNumberController,
-                decoration: const InputDecoration(labelText: 'Phone Number'),
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a phone number';
-                  }
-                  // Basic phone number validation (can be improved)
-                  if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-                    return 'Please enter a valid phone number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _addGuest,
-                child: const Text('Add Guest'),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

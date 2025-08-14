@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/guest.dart';
+import 'package:txt_invite/src/models/rsvp.dart';
 
 import 'package:txt_invite/src/services/api.dart';
 
@@ -32,6 +33,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
     _guestListFuture = Api().guestLists.getGuestList(event.guestListId);
     return event;
+  }
+
+  String _getRsvpStatusString(RsvpStatus status) {
+    switch (status) {
+      case RsvpStatus.attending:
+        return 'Attending';
+      case RsvpStatus.notAttending:
+        return 'Not Attending';
+      case RsvpStatus.maybe:
+        return 'Maybe';
+      default:
+        return 'Pending';
+    }
   }
 
   @override
@@ -120,9 +134,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 final guestList = guestListSnapshot.data!;
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: guestList
-                                      .map((guest) => Text('- ${guest.firstName} ${guest.lastName}'))
-                                      .toList(),
+                                  children: guestList.map((guest) {
+                                    final rsvp = event.rsvps.firstWhere(
+                                      (r) => r.id == guest.id,
+                                      orElse: () => Rsvp(id: guest.id!, attending: RsvpStatus.pending), // Default to pending if no RSVP found
+                                    );
+                                    return Text(
+                                        '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.attending)})');
+                                  }).toList(),
                                 );
                               }
                             },

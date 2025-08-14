@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
@@ -82,7 +83,7 @@ class _RsvpScreenState extends State<RsvpScreen> {
                       labelText: 'Your RSVP',
                       border: OutlineInputBorder(),
                     ),
-                    items: RsvpStatus.values.map((status) {
+                    items: RsvpStatus.values.where((status) => status != RsvpStatus.pending).map((status) {
                       return DropdownMenuItem(
                         value: status,
                         child: Text(status.toString().split('.').last),
@@ -113,7 +114,7 @@ class _RsvpScreenState extends State<RsvpScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('RSVP submitted successfully!')),
                           );
-                          Navigator.of(context).pop();
+                          GoRouter.of(context).go('/events/${widget.eventId}');
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Failed to submit RSVP: $e')),

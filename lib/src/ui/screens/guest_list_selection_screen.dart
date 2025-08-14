@@ -8,16 +8,17 @@ class GuestListSelectionScreen extends StatefulWidget {
   const GuestListSelectionScreen({super.key});
 
   @override
-  State<GuestListSelectionScreen> createState() => _GuestListSelectionScreenState();
+  State<GuestListSelectionScreen> createState() => GuestListSelectionScreenState();
 }
 
-class _GuestListSelectionScreenState extends State<GuestListSelectionScreen> {
+class GuestListSelectionScreenState extends State<GuestListSelectionScreen> {
   List<Guest> _currentGuests = [];
 
   void _navigateAndAddGuestsManually() async {
-    final newGuest = await Navigator.push<Guest>(
-      context,
-      MaterialPageRoute(builder: (context) => const ManualGuestEntryScreen()),
+    final newGuest = await showModalBottomSheet<Guest>(
+      context: context,
+      isScrollControlled: true, // Allows the bottom sheet to be full height if needed
+      builder: (context) => const ManualGuestEntryScreen(),
     );
     if (newGuest != null) {
       setState(() {
@@ -46,13 +47,7 @@ class _GuestListSelectionScreenState extends State<GuestListSelectionScreen> {
       MaterialPageRoute(
         builder: (context) => GuestListReviewScreen(initialGuests: _currentGuests),
       ),
-    ).then((_) {
-      // When returning from review screen, clear current guests to start fresh for next guest list creation
-      setState(() {
-        _currentGuests = [];
-      });
-    });
-  }
+    );
 
   @override
   Widget build(BuildContext context) {
