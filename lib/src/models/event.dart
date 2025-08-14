@@ -1,5 +1,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:txt_invite/src/models/rsvp.dart';
 
 class Event {
   final String id;
@@ -10,6 +11,7 @@ class Event {
   final String guestListId;
   final String invitationImageUrl;
   final String createdBy;
+  final List<Rsvp> rsvps;
 
   Event({
     required this.id,
@@ -20,6 +22,7 @@ class Event {
     required this.guestListId,
     required this.invitationImageUrl,
     required this.createdBy,
+    this.rsvps = const [],
   });
 
   Event copyWith({
@@ -31,6 +34,7 @@ class Event {
     String? guestListId,
     String? invitationImageUrl,
     String? createdBy,
+    List<Rsvp>? rsvps,
   }) {
     return Event(
       id: id ?? this.id,
@@ -41,6 +45,7 @@ class Event {
       guestListId: guestListId ?? this.guestListId,
       invitationImageUrl: invitationImageUrl ?? this.invitationImageUrl,
       createdBy: createdBy ?? this.createdBy,
+      rsvps: rsvps ?? this.rsvps,
     );
   }
 
@@ -54,6 +59,7 @@ class Event {
       guestListId: (map['guestListId'] as DocumentReference).id,
       invitationImageUrl: map['invitationImageUrl'],
       createdBy: map['createdBy'],
+      rsvps: (map['rsvps'] as List<dynamic>).map((e) => Rsvp.fromMap(e)).toList(),
     );
   }
 
@@ -66,6 +72,7 @@ class Event {
       'guestListId': FirebaseFirestore.instance.collection('guest_lists').doc(guestListId),
       'invitationImageUrl': invitationImageUrl,
       'createdBy': createdBy,
+      'rsvps': rsvps.map((rsvp) => rsvp.toMap()).toList(),
     };
   }
 }

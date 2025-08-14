@@ -13,7 +13,7 @@ class EventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        context.go('/events/${event.id}');
+        context.go('/events/${event.id}', extra: {'fromHome': true});
       },
       child: Card(
         margin: const EdgeInsets.all(8.0),

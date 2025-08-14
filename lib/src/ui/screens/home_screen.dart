@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/ui/screens/create_event_screen.dart';
+import 'package:txt_invite/src/ui/widgets/app_drawer.dart';
 import 'package:txt_invite/src/ui/widgets/event_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -74,10 +75,11 @@ class _HomeScreenState extends State<HomeScreen> {
           await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const CreateEventScreen()),
           );
-          _refreshEvents();
+          // _refreshEvents();
         },
         child: const Icon(Icons.add),
       ),
+      drawer: const AppDrawer(),
     );
   }
 }

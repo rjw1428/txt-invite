@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/guest.dart';
 
@@ -38,6 +39,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Event Details'),
+        leading: (GoRouterState.of(context).extra is Map && (GoRouterState.of(context).extra as Map)['fromHome'] == true)
+            ? BackButton(
+                onPressed: () {
+                  GoRouter.of(context).go('/');
+                },
+              )
+            : null,
       ),
       body: FutureBuilder<Event>(
         future: _eventFuture,

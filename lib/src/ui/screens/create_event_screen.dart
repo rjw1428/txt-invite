@@ -20,7 +20,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final _formKey = GlobalKey<FormState>();
+  final List<GlobalKey<FormState>> _formKeys = List.generate(6, (_) => GlobalKey<FormState>());
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _startTime;
@@ -53,7 +53,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   void _nextPage() {
-    if (_formKey.currentState!.validate()) {
+    if (_formKeys[_currentPage].currentState != null && _formKeys[_currentPage].currentState!.validate()) {
       if (_currentPage < 5) { // Assuming 6 steps (0-5)
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
@@ -63,10 +63,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           _currentPage++;
         });
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please complete all required fields before proceeding.')),
+      );
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please complete all required fields before proceeding.')),
-    );
   }
 
   void _previousPage() {
@@ -82,7 +83,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   Future<void> _createEvent() async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKeys[_currentPage].currentState != null && _formKeys[_currentPage].currentState!.validate()) {
       try {
         // Simulate image generation and upload
         // In a real app, this would be replaced by actual image generation logic
@@ -146,7 +147,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   },
                   children: [
                     EventDetailsStep(
-                      formKey: _formKey,
+                      formKey: _formKeys[0],
                       titleController: _titleController,
                       descriptionController: _descriptionController,
                       startTime: _startTime,
@@ -163,9 +164,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       },
                     ),
                     TemplateSelectionStep(
-                      formKey: _formKey,
+                      formKey: _formKeys[1],
                       onTemplateSelected: (template) {
-                        print("SELECTED TEMPLATE: $template");
                         setState(() {
                           _selectedTemplate = template;
                         });
@@ -173,6 +173,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     ),
                     const InvitationCustomizationStep(),
                     GuestListManagementStep(
+                      formKey: _formKeys[3],
                       onGuestListSelected: (guestListId) {
                         setState(() {
                           _selectedGuestListId = guestListId;

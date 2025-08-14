@@ -5,6 +5,8 @@ import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/services/firebase/firebase_auth_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_event_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_guest_list_service.dart';
+import 'package:txt_invite/src/ui/screens/guest_list_screen.dart';
+import 'package:txt_invite/src/ui/screens/rsvp_screen.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'firebase_options.dart';
 import 'package:txt_invite/src/ui/screens/home_screen.dart';
@@ -35,10 +37,21 @@ final _router = GoRouter(
       },
     ),
     GoRoute(
-      path: '/events/:id',
+      path: '/events/:eventId',
       builder: (context, state) => EventDetailScreen(
-        eventId: state.pathParameters['id']!,
+        eventId: state.pathParameters['eventId']!,
       ),
+    ),
+    GoRoute(
+      path: '/events/:eventId/rsvp/:guestId', // Corrected route for RSVP
+      builder: (context, state) => RsvpScreen(
+        eventId: state.pathParameters['eventId']!,
+        guestId: state.pathParameters['guestId']!,
+      ),
+    ),
+    GoRoute(
+      path: '/guest-lists', // New route for GuestListScreen
+      builder: (context, state) => const GuestListScreen(),
     ),
   ],
 );

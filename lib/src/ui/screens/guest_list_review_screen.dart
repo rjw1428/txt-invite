@@ -49,10 +49,10 @@ class _GuestListReviewScreenState extends State<GuestListReviewScreen> {
       return;
     }
 
-    final newGuestList = GuestList(
-      name: _guestListNameController.text.trim(),
-      guests: _guests,
-    );
+    // final newGuestList = GuestList(
+    //   name: _guestListNameController.text.trim(),
+    //   guests: _guests,
+    // );
 
     try {
       // await _guestListService.saveGuestList(newGuestList);

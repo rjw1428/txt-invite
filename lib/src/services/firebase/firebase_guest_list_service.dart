@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:txt_invite/src/interfaces/guest_list_service.dart';
 import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/guest_list.dart';
+import 'package:uuid/uuid.dart';
 
 class FirebaseGuestListService implements GuestListService {
 
@@ -13,7 +14,7 @@ class FirebaseGuestListService implements GuestListService {
   FirebaseGuestListService() : this._internal();
 
 
-@override
+  @override
   Future<GuestList> createGuestList(GuestList guestList) async {
     final doc = _firestore.collection('guest_lists').doc();
     final newGuestList = guestList.copyWith(id: doc.id);
@@ -36,13 +37,58 @@ class FirebaseGuestListService implements GuestListService {
   }
 
   @override
-  Future<List<GuestList>> getGuestLists() async {
-    final snapshot = await _firestore.collection('guest_lists').get();
+  Future<List<GuestList>> getGuestLists(String uid) async {
+    final snapshot = await _firestore.collection('guest_lists').where('createdBy', isEqualTo: uid).get();
     return snapshot.docs.map((doc) => GuestList.fromMap({'id': doc.id, ...doc.data()})).toList();
   }
 
   @override
-  Future<void> updateGuestList(GuestList guestList) async {
-    await _firestore.collection('guest_lists').doc(guestList.id).update(guestList.toJson());
+  Future<Guest?> getGuest(String guestListId, String guestId) async {
+    final doc = await _firestore.collection('guest_lists').doc(guestListId).get();
+    if (!doc.exists) {
+      return null;
+    }
+
+    final guestList = GuestList.fromMap(doc.data()!);
+    try {
+      return guestList.guests.firstWhere((guest) => guest.id == guestId);
+    } catch (e) {
+      return null;
+    }
+    
+  }
+
+  @override
+  Future<void> deleteGuest(String guestListId, Guest guest) async {
+    final docRef = _firestore.collection('guest_lists').doc(guestListId);
+    await docRef.update({
+      'guests': FieldValue.arrayRemove([guest.toJson()])
+    });
+  }
+
+  @override
+  Future<void> addGuest(String guestListId, Guest guest) async {
+    final docRef = _firestore.collection('guest_lists').doc(guestListId);
+    final newGuest = guest.copyWith(id: const Uuid().v4());
+    await docRef.update({
+      'guests': FieldValue.arrayUnion([newGuest.toJson()])
+    });
+  }
+
+  @override
+  Future<void> updateGuest(String guestListId, Guest guest) async {
+    final docRef = _firestore.collection('guest_lists').doc(guestListId);
+    final guestListSnapshot = await docRef.get();
+
+    if (guestListSnapshot.exists) {
+      final guestList = GuestList.fromMap(guestListSnapshot.data()!);
+      final updatedGuests = guestList.guests.map((g) {
+        return g.id == guest.id ? guest : g;
+      }).toList();
+
+      await docRef.update({
+        'guests': updatedGuests.map((g) => g.toJson()).toList()
+      });
+    }
   }
 }
