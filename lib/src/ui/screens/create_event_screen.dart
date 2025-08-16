@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:screenshot/screenshot.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/confirmation_step.dart';
@@ -8,6 +11,7 @@ import 'package:txt_invite/src/ui/widgets/create_event_steps/event_settings_step
 import 'package:txt_invite/src/ui/widgets/create_event_steps/guest_list_management_step.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/invitation_customization_step.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/template_selection_step.dart';
+import 'package:path_provider/path_provider.dart';
 
 class CreateEventScreen extends StatefulWidget {
   const CreateEventScreen({super.key});
@@ -30,6 +34,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   bool _allowComments = true;
   bool _guestListVisible = false;
   bool _rsvpRequired = true;
+
+  final ScreenshotController _screenshotController = ScreenshotController();
 
   @override
   void dispose() {
@@ -85,13 +91,17 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Future<void> _createEvent() async {
     if (_formKeys[_currentPage].currentState != null && _formKeys[_currentPage].currentState!.validate()) {
       try {
-        // Simulate image generation and upload
-        // In a real app, this would be replaced by actual image generation logic
-        // and then uploading the generated image file.
-        const String placeholderImageUrl = 'https://via.placeholder.com/150'; // Placeholder image
-        // For now, we'll just use the placeholder URL directly.
-        // In a real scenario, you would upload a File and get its download URL.
-        // Example: final imageUrl = await Api().storage.uploadFile(imageFile, 'invitations/${newEvent.id}.png');
+        final Uint8List? imageBytes = await _screenshotController.capture();
+
+        if (imageBytes == null) {
+          throw Exception("Failed to capture invitation image");
+        }
+
+        final tempDir = await getTemporaryDirectory();
+        final file = await File('${tempDir.path}/invitation.png').create();
+        await file.writeAsBytes(imageBytes);
+
+        final imageUrl = await Api().storage.uploadFile(file, 'invitations/${DateTime.now().millisecondsSinceEpoch}.png');
 
         final currentUserId = await _fetchCurrentUser();
         final newEvent = Event(
@@ -101,20 +111,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           startTime: _startTime!,
           endTime: _endTime!,
           guestListId: _selectedGuestListId!,
-          invitationImageUrl: placeholderImageUrl,
+          invitationImageUrl: imageUrl,
           createdBy: currentUserId,
         );
         await Api().events.createEvent(newEvent);
-
-        // Send invitation message to guests
-        // final guestList = await Api().guestLists.getGuestList(_selectedGuestListId!);
-        // if (guestList != null) {
-        //   for (final guest in guestList.guests) {
-        //     // Construct the invitation message. This can be more sophisticated.
-        //     final invitationMessage = "You're invited to ${newEvent.title}! Details: ${newEvent.description}. Link: [Invitation Link Placeholder]";
-        //     await Api().messaging.sendMessage(guest, invitationMessage);
-        //   }
-        // }
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Event created successfully and invitations sent!')),
@@ -173,6 +173,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     ),
                     InvitationCustomizationStep(
                       formKey: _formKeys[2],
+                      selectedTemplate: _selectedTemplate,
+                      screenshotController: _screenshotController,
                     ),
                     GuestListManagementStep(
                       formKey: _formKeys[3],

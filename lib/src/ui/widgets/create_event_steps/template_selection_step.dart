@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class TemplateSelectionStep extends StatefulWidget {
   final Function(String) onTemplateSelected;
   final GlobalKey<FormState> formKey;
 
-  const TemplateSelectionStep({super.key, required this.onTemplateSelected, required this.formKey});
+  const TemplateSelectionStep(
+      {super.key, required this.onTemplateSelected, required this.formKey});
 
   @override
   State<TemplateSelectionStep> createState() => _TemplateSelectionStepState();
@@ -20,6 +24,20 @@ class _TemplateSelectionStepState extends State<TemplateSelectionStep> {
   ];
 
   String? _selectedTemplate;
+  String? _selectedImage;
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _selectedImage = image.path;
+        _selectedTemplate = image.path;
+      });
+      widget.onTemplateSelected(image.path);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,25 +67,45 @@ class _TemplateSelectionStepState extends State<TemplateSelectionStep> {
                     SizedBox(
                       height: 300, // Give the GridView a fixed height
                       child: GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
                         ),
-                        itemCount: _templates.length,
+                        itemCount: _templates.length + 1,
                         itemBuilder: (context, index) {
-                          final templateName = _templates[index];
+                          if (index == 0) {
+                            return GestureDetector(
+                              onTap: _pickImage,
+                              child: Card(
+                                color: _selectedImage != null
+                                    ? Colors.blue.shade100
+                                    : Colors.white,
+                                elevation: _selectedImage != null ? 4 : 1,
+                                child: _selectedImage != null
+                                    ? Image.file(File(_selectedImage!))
+                                    : const Center(
+                                        child: Text('Upload from Gallery'),
+                                      ),
+                              ),
+                            );
+                          }
+                          final templateName = _templates[index - 1];
                           final isSelected = _selectedTemplate == templateName;
                           return GestureDetector(
                             onTap: () {
                               setState(() {
                                 _selectedTemplate = templateName;
+                                _selectedImage = null;
                                 state.didChange(templateName);
                               });
                               widget.onTemplateSelected(templateName);
                             },
                             child: Card(
-                              color: isSelected ? Colors.blue.shade100 : Colors.white,
+                              color: isSelected
+                                  ? Colors.blue.shade100
+                                  : Colors.white,
                               elevation: isSelected ? 4 : 1,
                               child: Center(
                                 child: Text(
@@ -75,7 +113,9 @@ class _TemplateSelectionStepState extends State<TemplateSelectionStep> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: isSelected ? Colors.blue : Colors.black,
+                                    color: isSelected
+                                        ? Colors.blue
+                                        : Colors.black,
                                   ),
                                 ),
                               ),
@@ -89,7 +129,8 @@ class _TemplateSelectionStepState extends State<TemplateSelectionStep> {
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
                           state.errorText!,
-                          style: TextStyle(color: Theme.of(context).colorScheme.error),
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error),
                         ),
                       ),
                   ],
