@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/ui/screens/home_screen.dart';
 
@@ -33,15 +34,14 @@ class _LoginScreenState extends State<LoginScreen> {
           _emailController.text,
           _passwordController.text,
         );
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
       } catch (e) {
         // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login failed: $e')),
         );
       } finally {
+        // Should route only if logged in
+        GoRouter.of(context).go('/');
         setState(() {
           _isLoading = false;
         });

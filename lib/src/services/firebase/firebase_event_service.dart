@@ -17,9 +17,8 @@ class FirebaseEventService implements EventService {
   @override
   Future<Event> createEvent(Event event) async {
     final doc = _firestore.collection('events').doc();
-    final newEvent = event.copyWith(id: doc.id);
-    await doc.set(newEvent.toMap());
-    return newEvent;
+    await doc.set(event.toMap());
+    return event.copyWith(id: doc.id);
   }
 
   @override
@@ -71,7 +70,8 @@ class FirebaseEventService implements EventService {
     final guestData = {'id': event.guestListId, ...guestDoc.data()!};
     final guests = GuestList.fromMap(guestData).guests;
     try {
-      final guest = guests.firstWhere((guest) => guest.id == guestId);
+      // Verify guest is in the guest list
+      guests.firstWhere((guest) => guest.id == guestId);
     } catch (e) {
       throw Exception('Guest not found in Guest List');
     }

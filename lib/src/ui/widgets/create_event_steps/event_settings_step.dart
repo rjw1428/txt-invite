@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 class EventSettingsStep extends StatefulWidget {
+  final GlobalKey<FormState> formKey;
   final bool allowComments;
   final bool guestListVisible;
   final bool rsvpRequired;
@@ -11,6 +12,7 @@ class EventSettingsStep extends StatefulWidget {
 
   const EventSettingsStep({
     super.key,
+    required this.formKey,
     required this.allowComments,
     required this.guestListVisible,
     required this.rsvpRequired,
@@ -28,7 +30,9 @@ class _EventSettingsStepState extends State<EventSettingsStep> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
+      child: Form(
+        key: widget.formKey,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
@@ -53,6 +57,7 @@ class _EventSettingsStepState extends State<EventSettingsStep> {
           ),
         ],
       ),
+      )
     );
   }
 }

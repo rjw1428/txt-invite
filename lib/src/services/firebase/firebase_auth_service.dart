@@ -26,7 +26,6 @@ class FirebaseAuthService implements AuthService {
     @override
     Future<User?> signIn(String email, String password) async {
       try {
-        await _auth.setPersistence(firebase_auth.Persistence.LOCAL);
         final credential = await _auth.signInWithEmailAndPassword(
           email: email,
           password: password,

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 class ConfirmationStep extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
   final String title;
   final String description;
   final DateTime? startTime;
@@ -14,6 +15,7 @@ class ConfirmationStep extends StatelessWidget {
 
   const ConfirmationStep({
     super.key,
+    required this.formKey,
     required this.title,
     required this.description,
     required this.startTime,
@@ -29,23 +31,26 @@ class ConfirmationStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: ListView(
-        children: [
-          const Text(
-            'Confirm Event Details',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Text('Title: $title'),
-          Text('Description: $description'),
-          Text('Start Time: ${startTime?.toLocal().toString().split('.')[0] ?? 'N/A'}'),
-          Text('End Time: ${endTime?.toLocal().toString().split('.')[0] ?? 'N/A'}'),
-          Text('Selected Template: ${selectedTemplate ?? 'N/A'}'),
-          Text('Selected Guest List ID: ${selectedGuestListId ?? 'N/A'}'),
-          Text('Allow Comments: ${allowComments ? 'Yes' : 'No'}'),
-          Text('Guest List Visible: ${guestListVisible ? 'Yes' : 'No'}'),
-          Text('RSVP Required: ${rsvpRequired ? 'Yes' : 'No'}'),
-        ],
+      child: Form(
+        key: formKey,
+        child: ListView(
+          children: [
+            const Text(
+              'Confirm Event Details',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Text('Title: $title'),
+            Text('Description: $description'),
+            Text('Start Time: ${startTime?.toLocal().toString().split('.')[0] ?? 'N/A'}'),
+            Text('End Time: ${endTime?.toLocal().toString().split('.')[0] ?? 'N/A'}'),
+            Text('Selected Template: ${selectedTemplate ?? 'N/A'}'),
+            Text('Selected Guest List ID: ${selectedGuestListId ?? 'N/A'}'),
+            Text('Allow Comments: ${allowComments ? 'Yes' : 'No'}'),
+            Text('Guest List Visible: ${guestListVisible ? 'Yes' : 'No'}'),
+            Text('RSVP Required: ${rsvpRequired ? 'Yes' : 'No'}'),
+          ],
+        ),
       ),
     );
   }

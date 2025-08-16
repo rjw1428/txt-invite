@@ -3,15 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:screenshot/screenshot.dart';
 
 class InvitationCustomizationStep extends StatefulWidget {
   const InvitationCustomizationStep(
-      {super.key, required this.formKey, this.selectedTemplate, required this.screenshotController});
+      {super.key, required this.formKey, this.selectedTemplate});
 
   final GlobalKey<FormState> formKey;
   final String? selectedTemplate;
-  final ScreenshotController screenshotController;
 
   @override
   State<InvitationCustomizationStep> createState() =>
@@ -54,9 +52,7 @@ class _InvitationCustomizationStepState
       child: Column(
         children: [
           Expanded(
-            child: Screenshot(
-              controller: widget.screenshotController,
-              child: Container(
+            child: Container(
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   image: widget.selectedTemplate != null &&
@@ -126,7 +122,6 @@ class _InvitationCustomizationStepState
                   ],
                 ),
               ),
-            ),
           ),
           // Controls for customization
           Padding(
@@ -176,7 +171,10 @@ class _InvitationCustomizationStepState
                       .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
-                      child: Text(value),
+                      child: Text(
+                        value,
+                        style: GoogleFonts.getFont(value),
+                      ),
                     );
                   }).toList(),
                 ),

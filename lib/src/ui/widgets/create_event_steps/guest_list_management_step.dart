@@ -19,7 +19,6 @@ class GuestListManagementStep extends StatefulWidget {
 }
 
 class _GuestListManagementStepState extends State<GuestListManagementStep> {
-  late Future<List<GuestList>> _guestListsFuture;
   String? _selectedGuestListId;
 
   @override
@@ -55,6 +54,7 @@ class _GuestListManagementStepState extends State<GuestListManagementStep> {
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return const Center(child: Text('No guest lists found.'));
               } else {
+                final guestLists = snapshot.data!;
                 return Form(
                   key: widget.formKey,
                   child: Padding(
@@ -82,33 +82,10 @@ class _GuestListManagementStepState extends State<GuestListManagementStep> {
                               return Column(
                                 children: [
                                   Expanded(
-                                    child: FutureBuilder<List<GuestList>>(
-                                      future: _guestListsFuture,
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return const Center(
-                                            child: CircularProgressIndicator(),
-                                          );
-                                        } else if (snapshot.hasError) {
-                                          return Center(
-                                            child: Text(
-                                              'Error: ${snapshot.error}',
-                                            ),
-                                          );
-                                        } else if (!snapshot.hasData ||
-                                            snapshot.data!.isEmpty) {
-                                          return const Center(
-                                            child: Text(
-                                              'No guest lists found.',
-                                            ),
-                                          );
-                                        } else {
-                                          return ListView.builder(
-                                            itemCount: snapshot.data!.length,
+                                    child: ListView.builder(
+                                            itemCount: guestLists.length,
                                             itemBuilder: (context, index) {
-                                              final guestList =
-                                                  snapshot.data![index];
+                                              final guestList = guestLists[index];
                                               final isSelected =
                                                   _selectedGuestListId ==
                                                   guestList.id;
@@ -141,9 +118,6 @@ class _GuestListManagementStepState extends State<GuestListManagementStep> {
                                                   },
                                                 ),
                                               );
-                                            },
-                                          );
-                                        }
                                       },
                                     ),
                                   ),

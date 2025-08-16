@@ -125,6 +125,24 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
                 }
               },
             ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(vertical: 16.0),
+            //   child: ElevatedButton(
+            //     onPressed: () async {
+            //       final success = await Api().messaging.sendMessage(Guest(firstName: 'Ryan', lastName: 'Wilk', phoneNumber: '6107304332'), Event());
+            //       if (success) {
+            //         ScaffoldMessenger.of(context).showSnackBar(
+            //           const SnackBar(content: Text('Message Sent')),
+            //         );
+            //       } else {
+            //         ScaffoldMessenger.of(context).showSnackBar(
+            //           const SnackBar(content: Text('Failed to Send Message')),
+            //         );
+            //       }
+            //     },
+            //     child: const Text('Send Test Message'),
+            //   ),
+            // ),
           ],
         ),
       ),
