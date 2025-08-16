@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:txt_invite/src/models/event.dart';
+import 'package:txt_invite/src/models/rsvp.dart';
 
 import 'package:go_router/go_router.dart';
 
@@ -37,6 +38,16 @@ class EventCard extends StatelessWidget {
               ),
               Text(
                 'Ends: ${event.endTime.toLocal().toString().split('.')[0]}',
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Attending: ${event.rsvpCounts[RsvpStatus.attending] ?? 0}'),
+                  Text('Maybe: ${event.rsvpCounts[RsvpStatus.maybe] ?? 0}'),
+                  Text('Not Attending: ${event.rsvpCounts[RsvpStatus.notAttending] ?? 0}'),
+                  Text('Pending: ${event.rsvpCounts[RsvpStatus.pending] ?? 0}'),
+                ],
               ),
             ],
           ),

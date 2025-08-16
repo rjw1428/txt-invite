@@ -25,6 +25,20 @@ class Event {
     this.rsvps = const [],
   });
 
+  Map<RsvpStatus, int> get rsvpCounts {
+    final counts = <RsvpStatus, int>{
+      RsvpStatus.attending: 0,
+      RsvpStatus.notAttending: 0,
+      RsvpStatus.maybe: 0,
+      RsvpStatus.pending: 0,
+    };
+
+    for (final rsvp in rsvps) {
+      counts[rsvp.attending] = (counts[rsvp.attending] ?? 0) + 1;
+    }
+    return counts;
+  }
+
   Event copyWith({
     String? id,
     String? title,
