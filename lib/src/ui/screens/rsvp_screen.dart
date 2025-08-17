@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
-
 import 'package:txt_invite/src/services/api.dart';
 
 class RsvpScreen extends StatefulWidget {
@@ -67,6 +66,12 @@ class _RsvpScreenState extends State<RsvpScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Image.network(
+                      event.invitationImageUrl,
+                      width: 800,
+                      height: 600,
+                      fit: BoxFit.cover,
+                    ),
                   Text(
                     'Event: ${event.title}',
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),

@@ -37,10 +37,10 @@ final _router = GoRouter(
       },
     ),
     GoRoute(
-      path: '/events/:eventId/rsvp/:guestId',
+      path: '/rsvp',
       builder: (context, state) => RsvpScreen(
-        eventId: state.pathParameters['eventId']!,
-        guestId: state.pathParameters['guestId']!,
+        eventId: state.uri.queryParameters['eventId']!,
+        guestId: state.uri.queryParameters['guestId']!,
       ),
     ),
     GoRoute(

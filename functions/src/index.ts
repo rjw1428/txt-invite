@@ -16,9 +16,8 @@ export const ogPreview = onRequest(async (request, response) => {
     }
     logger.info("Directory contents:", files);
   });
-  // Assuming path is /events/:eventId/rsvp/:guestId
-  const eventId = request.path.split("/")[2];
-  const guestId = request.path.split("/")[4];
+  const eventId = request.query.eventId as string;
+  const guestId = request.query.guestId as string;
 
   if (!eventId || !guestId) {
     response.status(400).send("Missing eventId or guestId");
@@ -46,7 +45,7 @@ export const ogPreview = onRequest(async (request, response) => {
     const title = eventData.title || "Event Invitation";
     const description = eventData.description || "You're invited to an event!";
     const imageUrl = eventData.invitationImageUrl || ""; // Default image
-    const url = `https://${process.env.GCLOUD_PROJECT}.web.app/events/${eventId}/rsvp/${guestId}`;
+    const url = `https://${process.env.GCLOUD_PROJECT}.web.app/rsvp?eventId=${eventId}&guestId=${guestId}`;
 
     const ogTags = `
       <meta property="og:title" content="${title}" />

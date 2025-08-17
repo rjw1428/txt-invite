@@ -12,7 +12,7 @@ class SmsService implements MessagingService {
         try {
             return messenger.sendSMS(
               phoneNumber: guest.phoneNumber,
-              message: "$HOST/events/${event.id}/rsvp/${guest.id}"
+              message: "$HOST/rsvp?eventId=${event.id}&guestId=${guest.id}"
             );
         } catch (e) {
             print('Error sending SMS: $e');

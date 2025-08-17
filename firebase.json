@@ -28,7 +28,7 @@
     ],
     "rewrites": [
       {
-        "source": "/events/:eventId/rsvp/:guestId",
+        "source": "/rsvp",
         "function": "ogPreview"
       },
       {
