@@ -34,6 +34,14 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.history),
+            title: const Text('Event History'),
+            onTap: () {
+              context.go('/event-history');
+              Navigator.pop(context); // Close the drawer
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
             onTap: () async {

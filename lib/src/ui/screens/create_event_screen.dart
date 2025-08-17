@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:txt_invite/src/models/event.dart';
+import 'package:txt_invite/src/models/event_status.dart';
 import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/confirmation_step.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/event_details_step.dart';
@@ -112,6 +113,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           guestListId: _selectedGuestListId!,
           invitationImageUrl: imgUrl,
           createdBy: currentUserId,
+          status: EventStatus.active,
         );
 
         final event = await Api().events.createEvent(newEvent);

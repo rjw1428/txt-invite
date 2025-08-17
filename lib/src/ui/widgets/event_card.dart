@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:txt_invite/src/models/event.dart';
+import 'package:txt_invite/src/models/event_status.dart';
 import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 import 'package:txt_invite/src/services/api.dart';
@@ -11,8 +12,8 @@ import 'package:go_router/go_router.dart';
 
 class EventCard extends StatefulWidget {
   final Event event;
-
-  const EventCard({super.key, required this.event});
+  final bool showActionMenu;
+  const EventCard({super.key, required this.event, this.showActionMenu = true});
 
   @override
   State<EventCard> createState() => _EventCardState();
@@ -114,7 +115,8 @@ class _EventCardState extends State<EventCard> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              actionMenu(context),
+              if (widget.showActionMenu)
+                actionMenu(context),
             ],
           ),
           subtitle: Column(
@@ -147,6 +149,15 @@ class _EventCardState extends State<EventCard> {
                   ),
                 ],
               ),
+              if (widget.event.status == EventStatus.cancelled) ...[
+                const SizedBox(height: 8),
+                Center(
+                  child: const Text(
+                    'Event has been cancelled',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

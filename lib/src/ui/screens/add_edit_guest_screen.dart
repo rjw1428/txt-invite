@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:txt_invite/src/models/guest.dart';
 
 class AddEditGuestScreen extends StatefulWidget {
@@ -14,16 +15,29 @@ class AddEditGuestScreen extends StatefulWidget {
 
 class AddEditGuestScreenState extends State<AddEditGuestScreen> {
   final _formKey = GlobalKey<FormState>();
-  late String _firstName;
-  late String _lastName;
-  late String _phoneNumber;
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _phoneNumberController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _firstName = widget.guest?.firstName ?? '';
-    _lastName = widget.guest?.lastName ?? '';
-    _phoneNumber = widget.guest?.phoneNumber ?? '';
+    _firstNameController.text = widget.guest?.firstName ?? '';
+    _lastNameController.text = widget.guest?.lastName ?? '';
+    _phoneNumberController.text = widget.guest?.phoneNumber ?? '';
+  }
+
+  Future<void> _pickContact() async {
+    if (await FlutterContacts.requestPermission()) {
+      final contact = await FlutterContacts.openExternalPick();
+      if (contact != null) {
+        setState(() {
+          _firstNameController.text = contact.name.first;
+          _lastNameController.text = contact.name.last;
+          _phoneNumberController.text = contact.phones.first.number;
+        });
+      }
+    }
   }
 
   @override
@@ -39,7 +53,7 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
           child: Column(
             children: <Widget>[
               TextFormField(
-                initialValue: _firstName,
+                controller: _firstNameController,
                 decoration: const InputDecoration(labelText: 'First Name'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -47,10 +61,9 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
                   }
                   return null;
                 },
-                onSaved: (value) => _firstName = value!,
               ),
               TextFormField(
-                initialValue: _lastName,
+                controller: _lastNameController,
                 decoration: const InputDecoration(labelText: 'Last Name'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -58,10 +71,9 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
                   }
                   return null;
                 },
-                onSaved: (value) => _lastName = value!,
               ),
               TextFormField(
-                initialValue: _phoneNumber,
+                controller: _phoneNumberController,
                 decoration: const InputDecoration(labelText: 'Phone Number'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -69,18 +81,21 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
                   }
                   return null;
                 },
-                onSaved: (value) => _phoneNumber = value!,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
+                onPressed: _pickContact,
+                child: const Text('Select from Contacts'),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
                     final newGuest = Guest(
                       id: widget.guest?.id, // Use existing ID if editing
-                      firstName: _firstName,
-                      lastName: _lastName,
-                      phoneNumber: _phoneNumber,
+                      firstName: _firstNameController.text,
+                      lastName: _lastNameController.text,
+                      phoneNumber: _phoneNumberController.text,
                     );
                     widget.onSave(newGuest);
                     Navigator.of(context).pop(); // Go back to previous screen

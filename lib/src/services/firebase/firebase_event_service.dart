@@ -5,16 +5,13 @@ import 'package:txt_invite/src/models/event_status.dart';
 import 'package:txt_invite/src/models/guest_list.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 
-
 class FirebaseEventService implements EventService {
-
   final FirebaseFirestore _firestore;
 
-  FirebaseEventService._internal()
-      : _firestore = FirebaseFirestore.instance;
+  FirebaseEventService._internal() : _firestore = FirebaseFirestore.instance;
 
   FirebaseEventService() : this._internal();
-  
+
   @override
   Future<Event> createEvent(Event event) async {
     final doc = _firestore.collection('events').doc();
@@ -36,29 +33,30 @@ class FirebaseEventService implements EventService {
     return null;
   }
 
-@override
+  @override
   Future<List<Event>> getActiveEvents(String uid, DateTime filterTime) async {
-    final snapshot = await _firestore.collection('events')
-      .where('createdBy', isEqualTo: uid)
-      .where('startTime', isGreaterThanOrEqualTo: filterTime)
-      .where('status', isNotEqualTo: EventStatus.cancelled.toString())
-      .get();
+    final snapshot =
+        await _firestore
+            .collection('events')
+            .where('createdBy', isEqualTo: uid)
+            .where('startTime', isGreaterThanOrEqualTo: filterTime)
+            .where('status', isEqualTo: EventStatus.active.toString())
+            .get();
     return snapshot.docs.map((doc) {
-      print(doc.data());
       return Event.fromMap({'id': doc.id, ...doc.data()});
     }).toList();
   }
 
   @override
-  Future<List<Event>> getEvents(String uid, DateTime filterTime) async {
-    final snapshot = await _firestore.collection('events')
-      .where('createdBy', isEqualTo: uid)
-      .where('startTime', isGreaterThanOrEqualTo: filterTime)
-      .get();
+  Future<List<Event>> getEventHistory(String uid, DateTime filterTime) async {
+    final snapshot =
+        await _firestore
+            .collection('events')
+            .where('createdBy', isEqualTo: uid)
+            .get();
     return snapshot.docs.map((doc) {
-      print(doc.data());
       return Event.fromMap({'id': doc.id, ...doc.data()});
-    }).toList();
+    }).where((event) => event.startTime.isBefore(filterTime) || event.status == EventStatus.cancelled).toList();
   }
 
   @override
@@ -67,9 +65,13 @@ class FirebaseEventService implements EventService {
   }
 
   @override
-  Future<void> updateRsvp({required String eventId, required String guestId, required RsvpStatus status}) async {
+  Future<void> updateRsvp({
+    required String eventId,
+    required String guestId,
+    required RsvpStatus status,
+  }) async {
     final rsvp = Rsvp(id: guestId, status: status);
-    
+
     final eventRef = _firestore.collection('events').doc(eventId);
     final eventDoc = await eventRef.get();
 
@@ -78,7 +80,9 @@ class FirebaseEventService implements EventService {
     }
     final eventData = {'id': eventId, ...eventDoc.data()!};
     final event = Event.fromMap(eventData);
-    final guestRef = _firestore.collection('guest_lists').doc(event.guestListId);
+    final guestRef = _firestore
+        .collection('guest_lists')
+        .doc(event.guestListId);
     final guestDoc = await guestRef.get();
     if (!guestDoc.exists) {
       throw Exception('Guest List not found');
@@ -96,19 +100,21 @@ class FirebaseEventService implements EventService {
     // If guestId is already in the rsvps, remove it before adding
     final currentRsvps = event.rsvps;
     if (currentRsvps.any((r) => r.id == guestId)) {
-        await eventRef.update({
-          'rsvps': FieldValue.arrayRemove([currentRsvps.firstWhere((r) => r.id == guestId).toMap()])
-        });
+      await eventRef.update({
+        'rsvps': FieldValue.arrayRemove([
+          currentRsvps.firstWhere((r) => r.id == guestId).toMap(),
+        ]),
+      });
     }
     await eventRef.update({
-      'rsvps': FieldValue.arrayUnion([rsvp.toMap()])
+      'rsvps': FieldValue.arrayUnion([rsvp.toMap()]),
     });
   }
 
   @override
   Future<void> cancelEvent(String eventId) async {
     await _firestore.collection('events').doc(eventId).update({
-      'status': EventStatus.cancelled.toString(),
+      'status': EventStatus.cancelled,
     });
   }
 }
