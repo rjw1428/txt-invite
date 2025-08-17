@@ -1,0 +1,4 @@
+enum EventStatus {
+  active,
+  cancelled,
+}

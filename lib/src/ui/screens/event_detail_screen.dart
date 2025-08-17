@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/models/event.dart';
-import 'package:txt_invite/src/models/guest.dart';
+import 'package:txt_invite/src/models/guest_list.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 
 import 'package:txt_invite/src/services/api.dart';
@@ -18,7 +18,7 @@ class EventDetailScreen extends StatefulWidget {
 
 class _EventDetailScreenState extends State<EventDetailScreen> {
   late Future<Event> _eventFuture;
-  late Future<List<Guest>> _guestListFuture;
+  late Future<GuestList?> _guestListFuture;
 
   @override
   void initState() {
@@ -117,7 +117,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          FutureBuilder<List<Guest>>(
+                          FutureBuilder<GuestList?>(
                             future: _guestListFuture,
                             builder: (context, guestListSnapshot) {
                               if (guestListSnapshot.connectionState ==
@@ -128,13 +128,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 return Center(
                                     child: Text('Error: ${guestListSnapshot.error}'));
                               } else if (!guestListSnapshot.hasData ||
-                                  guestListSnapshot.data!.isEmpty) {
+                                  guestListSnapshot.data!.guests.isEmpty) {
                                 return const Text('No guests invited.');
                               } else {
                                 final guestList = guestListSnapshot.data!;
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: guestList.map((guest) {
+                                  children: guestList.guests.map((guest) {
                                     final rsvp = event.rsvps.firstWhere(
                                       (r) => r.id == guest.id,
                                       orElse: () => Rsvp(id: guest.id!, status: RsvpStatus.pending), // Default to pending if no RSVP found

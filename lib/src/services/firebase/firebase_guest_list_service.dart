@@ -28,12 +28,12 @@ class FirebaseGuestListService implements GuestListService {
   }
 
   @override
-  Future<List<Guest>> getGuestList(String guestListId) async {
+  Future<GuestList?> getGuestList(String guestListId) async {
     final doc = await _firestore.collection('guest_lists').doc(guestListId).get();
     if (doc.exists) {
-      return GuestList.fromMap(doc.data()!).guests;
+      return GuestList.fromMap({'id': doc.id, ...doc.data()!});
     }
-    return [];
+    return null;
   }
 
   @override

@@ -19,4 +19,17 @@ class SmsService implements MessagingService {
             return Future.value(false);
         }
   }
+
+    @override
+  Future<bool> sendCancellationMessage(Guest guest, Event event, String reason) {
+    try {
+      return messenger.sendSMS(
+        phoneNumber: guest.phoneNumber,
+        message: "${event.title} has been cancelled: $reason"
+      );
+    } catch (e) {
+      print('Error sending SMS: $e');
+      return Future.value(false);
+    }
+  }
 }

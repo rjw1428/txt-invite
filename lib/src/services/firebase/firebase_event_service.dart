@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:txt_invite/src/interfaces/event_service.dart';
 import 'package:txt_invite/src/models/event.dart';
+import 'package:txt_invite/src/models/event_status.dart';
 import 'package:txt_invite/src/models/guest_list.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 
@@ -35,9 +36,25 @@ class FirebaseEventService implements EventService {
     return null;
   }
 
+@override
+  Future<List<Event>> getActiveEvents(String uid, DateTime filterTime) async {
+    final snapshot = await _firestore.collection('events')
+      .where('createdBy', isEqualTo: uid)
+      .where('startTime', isGreaterThanOrEqualTo: filterTime)
+      .where('status', isNotEqualTo: EventStatus.cancelled.toString())
+      .get();
+    return snapshot.docs.map((doc) {
+      print(doc.data());
+      return Event.fromMap({'id': doc.id, ...doc.data()});
+    }).toList();
+  }
+
   @override
   Future<List<Event>> getEvents(String uid, DateTime filterTime) async {
-    final snapshot = await _firestore.collection('events').where('createdBy', isEqualTo: uid).where('startTime', isGreaterThanOrEqualTo: filterTime).get();
+    final snapshot = await _firestore.collection('events')
+      .where('createdBy', isEqualTo: uid)
+      .where('startTime', isGreaterThanOrEqualTo: filterTime)
+      .get();
     return snapshot.docs.map((doc) {
       print(doc.data());
       return Event.fromMap({'id': doc.id, ...doc.data()});
@@ -85,6 +102,13 @@ class FirebaseEventService implements EventService {
     }
     await eventRef.update({
       'rsvps': FieldValue.arrayUnion([rsvp.toMap()])
+    });
+  }
+
+  @override
+  Future<void> cancelEvent(String eventId) async {
+    await _firestore.collection('events').doc(eventId).update({
+      'status': EventStatus.cancelled.toString(),
     });
   }
 }

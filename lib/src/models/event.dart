@@ -1,5 +1,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:txt_invite/src/models/event_status.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 
 class Event {
@@ -13,6 +14,7 @@ class Event {
   final String createdBy;
   final List<Rsvp> rsvps;
   final int inviteCount;
+  final EventStatus status;
 
   Event({
     required this.id,
@@ -25,6 +27,7 @@ class Event {
     required this.createdBy,
     this.rsvps = const [],
     this.inviteCount = 0,
+    this.status = EventStatus.active,
   });
 
   Map<RsvpStatus, int> get rsvpCounts {
@@ -48,6 +51,7 @@ class Event {
     String? createdBy,
     List<Rsvp>? rsvps,
     int? inviteCount,
+    EventStatus? status,
   }) {
     return Event(
       id: id ?? this.id,
@@ -60,6 +64,7 @@ class Event {
       createdBy: createdBy ?? this.createdBy,
       rsvps: rsvps ?? this.rsvps,
       inviteCount: inviteCount ?? this.inviteCount,
+      status: status ?? this.status,
     );
   }
 
@@ -75,6 +80,7 @@ class Event {
       createdBy: map['createdBy'],
       rsvps: (map['rsvps'] as List<dynamic>).map((e) => Rsvp.fromMap(e)).toList(),
       inviteCount: map['inviteCount'] ?? 99,
+      status: EventStatus.values.firstWhere((e) => e.toString() == map['status'], orElse: () => EventStatus.active),
     );
   }
 
@@ -89,6 +95,7 @@ class Event {
       'createdBy': createdBy,
       'rsvps': rsvps.map((rsvp) => rsvp.toMap()).toList(),
       'inviteCount': inviteCount,
+      'status': status.toString(),
     };
   }
 }

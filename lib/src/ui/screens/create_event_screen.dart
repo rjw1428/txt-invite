@@ -117,8 +117,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         final event = await Api().events.createEvent(newEvent);
         final guestList = await Api().guestLists.getGuestList(_selectedGuestListId!);
 
-        for (final guest in guestList) {
-          await Api().messaging.sendMessage(guest, event);
+        if (guestList != null) {
+          for (final guest in guestList.guests) {
+            await Api().messaging.sendMessage(guest, event);
+          }
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
