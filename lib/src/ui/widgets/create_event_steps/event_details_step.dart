@@ -37,9 +37,10 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
   }
 
   Future<TimeOfDay?> _selectTime(BuildContext context, bool isStartTime) async {
+    final now = TimeOfDay.now();
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: TimeOfDay(hour: now.hour + 1, minute: 0),
     );
     return picked;
   }

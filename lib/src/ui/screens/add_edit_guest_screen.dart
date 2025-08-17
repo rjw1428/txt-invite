@@ -18,6 +18,7 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _phoneNumberController = TextEditingController();
+  late final List<Contact> contacts;
 
   @override
   void initState() {
@@ -25,18 +26,13 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
     _firstNameController.text = widget.guest?.firstName ?? '';
     _lastNameController.text = widget.guest?.lastName ?? '';
     _phoneNumberController.text = widget.guest?.phoneNumber ?? '';
+    _getContacts();
   }
 
-  Future<void> _pickContact() async {
-    if (await FlutterContacts.requestPermission()) {
-      final contact = await FlutterContacts.openExternalPick();
-      if (contact != null) {
-        setState(() {
-          _firstNameController.text = contact.name.first;
-          _lastNameController.text = contact.name.last;
-          _phoneNumberController.text = contact.phones.first.number;
-        });
-      }
+  Future<void> _getContacts() async {
+    if (await FlutterContacts.requestPermission(readonly: true)) {
+      final importedContacts = await FlutterContacts.getContacts();
+      setState(() => contacts = importedContacts);
     }
   }
 
@@ -83,9 +79,55 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _pickContact,
-                child: const Text('Select from Contacts'),
+              Autocomplete<Contact>(
+                optionsBuilder: (TextEditingValue textEditingValue) async {
+                  if (textEditingValue.text.isEmpty) {
+                    return const Iterable<Contact>.empty();
+                  }
+                  print('CONTACTS: ${contacts.length}');
+                  for (var i = 0; i < contacts.length && i < 10; i++) {
+                    print('Contact ${i + 1}: ${contacts[i].name.toString()}');
+                  }
+                  return contacts.where((contact) {
+                    final fullName = "${contact.name.first} ${contact.name.last}".toLowerCase();
+                    return fullName.contains(textEditingValue.text.toLowerCase());
+                  });
+                },
+                displayStringForOption: (Contact contact) => "${contact.name.first} ${contact.name.last}",
+                fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                  return TextFormField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    decoration: const InputDecoration(labelText: 'Search Contacts'),
+                  );
+                },
+                optionsViewBuilder: (context, onSelected, options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      child: SizedBox(
+                        height: 200,
+                        child: ListView.builder(
+                          itemCount: options.length,
+                          itemBuilder: (context, index) {
+                            final contact = options.elementAt(index);
+                            return ListTile(
+                              title: Text('${contact.name.first} ${contact.name.last}'),
+                              onTap: () {
+                                onSelected(contact);
+                                _firstNameController.text = contact.name.first;
+                                _lastNameController.text = contact.name.last;
+                                if (contact.phones.isNotEmpty) {
+                                  _phoneNumberController.text = contact.phones.first.number;
+                                }
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 10),
               ElevatedButton(
