@@ -8,16 +8,15 @@ class SmsService implements MessagingService {
   final messenger = FlutterBackgroundMessenger();
 
   @override
-  Future<bool> sendMessage(Guest guest, Event event) async {
+  Future<bool> sendMessage(Guest guest, Event event) {
         try {
-            return await messenger.sendSMS(
+            return messenger.sendSMS(
               phoneNumber: guest.phoneNumber,
               message: "$HOST/events/${event.id}/rsvp/${guest.id}"
             );
-
         } catch (e) {
             print('Error sending SMS: $e');
-            return false;
+            return Future.value(false);
         }
   }
 }

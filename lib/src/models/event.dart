@@ -12,6 +12,7 @@ class Event {
   final String invitationImageUrl;
   final String createdBy;
   final List<Rsvp> rsvps;
+  final int inviteCount;
 
   Event({
     required this.id,
@@ -23,19 +24,16 @@ class Event {
     required this.invitationImageUrl,
     required this.createdBy,
     this.rsvps = const [],
+    this.inviteCount = 0,
   });
 
   Map<RsvpStatus, int> get rsvpCounts {
     final counts = <RsvpStatus, int>{
-      RsvpStatus.attending: 0,
-      RsvpStatus.notAttending: 0,
-      RsvpStatus.maybe: 0,
-      RsvpStatus.pending: 0,
+      RsvpStatus.attending: rsvps.where((rsvp) => rsvp.status == RsvpStatus.attending).length,
+      RsvpStatus.notAttending: rsvps.where((rsvp) => rsvp.status == RsvpStatus.notAttending).length,
+      RsvpStatus.maybe: rsvps.where((rsvp) => rsvp.status == RsvpStatus.maybe).length,
+      RsvpStatus.pending: inviteCount - rsvps.length,
     };
-
-    for (final rsvp in rsvps) {
-      counts[rsvp.attending] = (counts[rsvp.attending] ?? 0) + 1;
-    }
     return counts;
   }
 
@@ -49,6 +47,7 @@ class Event {
     String? invitationImageUrl,
     String? createdBy,
     List<Rsvp>? rsvps,
+    int? inviteCount,
   }) {
     return Event(
       id: id ?? this.id,
@@ -60,6 +59,7 @@ class Event {
       invitationImageUrl: invitationImageUrl ?? this.invitationImageUrl,
       createdBy: createdBy ?? this.createdBy,
       rsvps: rsvps ?? this.rsvps,
+      inviteCount: inviteCount ?? this.inviteCount,
     );
   }
 
@@ -74,6 +74,7 @@ class Event {
       invitationImageUrl: map['invitationImageUrl'],
       createdBy: map['createdBy'],
       rsvps: (map['rsvps'] as List<dynamic>).map((e) => Rsvp.fromMap(e)).toList(),
+      inviteCount: map['inviteCount'] ?? 99,
     );
   }
 
@@ -87,6 +88,7 @@ class Event {
       'invitationImageUrl': invitationImageUrl,
       'createdBy': createdBy,
       'rsvps': rsvps.map((rsvp) => rsvp.toMap()).toList(),
+      'inviteCount': inviteCount,
     };
   }
 }

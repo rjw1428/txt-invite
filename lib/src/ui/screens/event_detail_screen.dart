@@ -137,10 +137,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   children: guestList.map((guest) {
                                     final rsvp = event.rsvps.firstWhere(
                                       (r) => r.id == guest.id,
-                                      orElse: () => Rsvp(id: guest.id!, attending: RsvpStatus.pending), // Default to pending if no RSVP found
+                                      orElse: () => Rsvp(id: guest.id!, status: RsvpStatus.pending), // Default to pending if no RSVP found
                                     );
                                     return Text(
-                                        '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.attending)})');
+                                        '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.status)})');
                                   }).toList(),
                                 );
                               }

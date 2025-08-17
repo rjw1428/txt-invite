@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/ui/screens/home_screen.dart';
 
@@ -40,8 +39,6 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(content: Text('Login failed: $e')),
         );
       } finally {
-        // Should route only if logged in
-        GoRouter.of(context).go('/');
         setState(() {
           _isLoading = false;
         });

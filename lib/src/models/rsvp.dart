@@ -7,21 +7,21 @@ enum RsvpStatus {
 
 class Rsvp {
   final String id;
-  final RsvpStatus attending;
+  final RsvpStatus status;
 
-  Rsvp({required this.id, required this.attending});
+  Rsvp({required this.id, required this.status});
 
   factory Rsvp.fromMap(Map<String, dynamic> map) {
     return Rsvp(
       id: map['id'],
-      attending: RsvpStatus.values[map['attending']],
+      status: RsvpStatus.values[map['status']],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'attending': attending.index,
+      'status': status.index,
     };
   }
 }

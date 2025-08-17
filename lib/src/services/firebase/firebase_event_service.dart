@@ -39,6 +39,7 @@ class FirebaseEventService implements EventService {
   Future<List<Event>> getEvents(String uid, DateTime filterTime) async {
     final snapshot = await _firestore.collection('events').where('createdBy', isEqualTo: uid).where('startTime', isGreaterThanOrEqualTo: filterTime).get();
     return snapshot.docs.map((doc) {
+      print(doc.data());
       return Event.fromMap({'id': doc.id, ...doc.data()});
     }).toList();
   }
@@ -50,7 +51,7 @@ class FirebaseEventService implements EventService {
 
   @override
   Future<void> updateRsvp({required String eventId, required String guestId, required RsvpStatus status}) async {
-    final rsvp = Rsvp(id: guestId, attending: status);
+    final rsvp = Rsvp(id: guestId, status: status);
     
     final eventRef = _firestore.collection('events').doc(eventId);
     final eventDoc = await eventRef.get();
@@ -58,7 +59,6 @@ class FirebaseEventService implements EventService {
     if (!eventDoc.exists) {
       throw Exception('Event not found');
     }
-
     final eventData = {'id': eventId, ...eventDoc.data()!};
     final event = Event.fromMap(eventData);
     final guestRef = _firestore.collection('guest_lists').doc(event.guestListId);

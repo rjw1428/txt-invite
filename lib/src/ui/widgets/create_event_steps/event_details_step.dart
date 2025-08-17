@@ -26,46 +26,22 @@ class EventDetailsStep extends StatefulWidget {
 }
 
 class _EventDetailsStepState extends State<EventDetailsStep> {
-  Future<void> _selectDate(BuildContext context, bool isStartTime) async {
+  Future<DateTime?> _selectDate(BuildContext context, bool isStartTime) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
-    if (picked != null) {
-      if (isStartTime) {
-        widget.onStartTimeChanged(picked);
-      } else {
-        widget.onEndTimeChanged(picked);
-      }
-    }
+    return picked;
   }
 
-  Future<void> _selectTime(BuildContext context, bool isStartTime) async {
+  Future<TimeOfDay?> _selectTime(BuildContext context, bool isStartTime) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
     );
-    if (picked != null) {
-      if (isStartTime) {
-        widget.onStartTimeChanged(DateTime(
-          widget.startTime!.year,
-          widget.startTime!.month,
-          widget.startTime!.day,
-          picked.hour,
-          picked.minute,
-        ));
-      } else {
-        widget.onEndTimeChanged(DateTime(
-          widget.endTime!.year,
-          widget.endTime!.month,
-          widget.endTime!.day,
-          picked.hour,
-          picked.minute,
-        ));
-      }
-    }
+    return picked;
   }
 
   @override
@@ -107,9 +83,18 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
                   : 'Start: ${widget.startTime!.toLocal().toString().split('.')[0]}'),
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
-                await _selectDate(context, true);
-                if (widget.startTime != null) {
-                  await _selectTime(context, true);
+                final date = await _selectDate(context, true);
+                if (date != null) {
+                  final time = await _selectTime(context, true);
+                  if (time != null) {
+                    widget.onStartTimeChanged(DateTime(
+                      date.year,
+                      date.month,
+                      date.day,
+                      time.hour,
+                      time.minute,
+                    ));
+                  }
                 }
               },
             ),
@@ -119,30 +104,21 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
                   : 'End: ${widget.endTime!.toLocal().toString().split('.')[0]}'),
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
-                await _selectDate(context, false);
-                if (widget.endTime != null) {
-                  await _selectTime(context, false);
+                final date = await _selectDate(context, true);
+                if (date != null) {
+                  final time = await _selectTime(context, true);
+                  if (time != null) {
+                    widget.onEndTimeChanged(DateTime(
+                      date.year,
+                      date.month,
+                      date.day,
+                      time.hour,
+                      time.minute,
+                    ));
+                  }
                 }
               },
             ),
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(vertical: 16.0),
-            //   child: ElevatedButton(
-            //     onPressed: () async {
-            //       final success = await Api().messaging.sendMessage(Guest(firstName: 'Ryan', lastName: 'Wilk', phoneNumber: '6107304332'), Event());
-            //       if (success) {
-            //         ScaffoldMessenger.of(context).showSnackBar(
-            //           const SnackBar(content: Text('Message Sent')),
-            //         );
-            //       } else {
-            //         ScaffoldMessenger.of(context).showSnackBar(
-            //           const SnackBar(content: Text('Failed to Send Message')),
-            //         );
-            //       }
-            //     },
-            //     child: const Text('Send Test Message'),
-            //   ),
-            // ),
           ],
         ),
       ),
