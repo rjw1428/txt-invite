@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:txt_invite/src/models/guest.dart';
-import 'package:txt_invite/src/ui/screens/contact_list_screen.dart';
 
 class AddEditGuestScreen extends StatefulWidget {
   final Guest? guest;
@@ -19,6 +18,9 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _phoneNumberController = TextEditingController();
+  List<Contact>? _contacts;
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -26,6 +28,34 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
     _firstNameController.text = widget.guest?.firstName ?? '';
     _lastNameController.text = widget.guest?.lastName ?? '';
     _phoneNumberController.text = widget.guest?.phoneNumber ?? '';
+    _loadContacts();
+  }
+
+  Future<void> _loadContacts() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final hasPermission = await FlutterContacts.requestPermission(readonly: true);
+      if (hasPermission) {
+        final contacts = await FlutterContacts.getContacts(withProperties: true);
+        setState(() {
+          _contacts = contacts;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = 'Permission denied';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Error loading contacts: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -38,6 +68,41 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
           key: _formKey,
           child: Column(
             children: <Widget>[
+              if (_isLoading)
+                const CircularProgressIndicator()
+              else if (_error != null)
+                Text(_error!)
+              else
+                Autocomplete<Contact>(
+                  optionsBuilder: (TextEditingValue textEditingValue) {
+                    if (textEditingValue.text.isEmpty) {
+                      return const Iterable<Contact>.empty();
+                    }
+                    return _contacts!.where((contact) {
+                      return contact.displayName.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                    });
+                  },
+                  displayStringForOption: (Contact contact) => contact.displayName,
+                  onSelected: (Contact selection) {
+                    _firstNameController.text = selection.name.first;
+                    _lastNameController.text = selection.name.last;
+                    if (selection.phones.isNotEmpty) {
+                      _phoneNumberController.text = selection.phones.first.number;
+                    }
+                  },
+                  fieldViewBuilder: (BuildContext context, TextEditingController textEditingController, FocusNode focusNode, VoidCallback onFieldSubmitted) {
+                    return TextField(
+                      controller: textEditingController,
+                      focusNode: focusNode,
+                      decoration: const InputDecoration(
+                        labelText: 'Search Contacts',
+                        // border: OutlineInputBorder(),
+                      ),
+                      onSubmitted: (value) => onFieldSubmitted(),
+                    );
+                  },
+                ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _firstNameController,
                 decoration: const InputDecoration(labelText: 'First Name'),
@@ -70,24 +135,6 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () async {
-                  final contact = await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ContactListScreen()),
-                  );
-                  if (contact != null && contact is Contact) {
-                    setState(() {
-                      _firstNameController.text = contact.name.first;
-                      _lastNameController.text = contact.name.last;
-                      if (contact.phones.isNotEmpty) {
-                        _phoneNumberController.text = contact.phones.first.number;
-                      }
-                    });
-                  }
-                },
-                child: const Text('Import from Contacts'),
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     final newGuest = Guest(
@@ -97,10 +144,14 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
                       phoneNumber: _phoneNumberController.text,
                     );
                     widget.onSave(newGuest);
-                    Navigator.of(context).pop(); // Go back to previous screen
+                    Navigator.of(context).pop();
                   }
                 },
                 child: const Text('Save'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
               ),
             ],
           ),

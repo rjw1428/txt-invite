@@ -40,6 +40,7 @@ class _GuestListScreenState extends State<GuestListScreen> {
         return AlertDialog(
           title: const Text('Create New Guest List'),
           content: TextField(
+            textCapitalization: TextCapitalization.words,
             onChanged: (value) {
               newName = value;
             },
