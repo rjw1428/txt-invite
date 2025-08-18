@@ -55,6 +55,11 @@ class _EventSettingsStepState extends State<EventSettingsStep> {
             value: widget.rsvpRequired,
             onChanged: widget.onRsvpRequiredChanged,
           ),
+          SwitchListTile(
+            title: const Text('Generate QR Code'),
+            value: false,
+            onChanged: (value) {},
+          ),
         ],
       ),
       )

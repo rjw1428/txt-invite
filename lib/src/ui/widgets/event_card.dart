@@ -127,6 +127,13 @@ class _EventCardState extends State<EventCard> {
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+             if (widget.event.invitationImageThumbnailUrl != 'nothing')
+                Image.network(
+                  widget.event.invitationImageThumbnailUrl,
+                  width: 300,
+                  height: 150,
+                  fit: BoxFit.cover,
+                ),
               const SizedBox(height: 8),
               Text(widget.event.description),
               const SizedBox(height: 8),

@@ -5,12 +5,19 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:txt_invite/src/utils/constants.dart';
 
+import 'package:screenshot/screenshot.dart';
+
 class InvitationCustomizationStep extends StatefulWidget {
-  const InvitationCustomizationStep(
-      {super.key, required this.formKey, this.selectedTemplate});
+  const InvitationCustomizationStep({
+    super.key,
+    required this.formKey,
+    this.selectedTemplate,
+    required this.screenshotController,
+  });
 
   final GlobalKey<FormState> formKey;
   final String? selectedTemplate;
+  final ScreenshotController screenshotController;
 
   @override
   State<InvitationCustomizationStep> createState() =>
@@ -53,14 +60,16 @@ class _InvitationCustomizationStepState
       child: Column(
         children: [
           Expanded(
-            child: Container(
+            child: Screenshot(
+              controller: widget.screenshotController,
+              child: Container(
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   image: widget.selectedTemplate != null &&
                           widget.selectedTemplate!.startsWith('/')
                       ? DecorationImage(
                           image: FileImage(File(widget.selectedTemplate!)),
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
                         )
                       : null,
                 ),
@@ -123,6 +132,7 @@ class _InvitationCustomizationStepState
                   ],
                 ),
               ),
+            ),
           ),
           // Controls for customization
           Padding(

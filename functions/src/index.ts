@@ -44,7 +44,7 @@ export const ogPreview = onRequest(async (request, response) => {
 
     const title = eventData.title || "Event Invitation";
     const description = eventData.description || "You're invited to an event!";
-    const imageUrl = eventData.invitationImageUrl || ""; // Default image
+    const imageUrl = eventData.invitationImageThumbnailUrl || ""; // default ?
     const url = `https://${process.env.GCLOUD_PROJECT}.web.app/rsvp?eventId=${eventId}&guestId=${guestId}`;
 
     const ogTags = `

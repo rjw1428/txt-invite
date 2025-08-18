@@ -237,12 +237,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         });
                       },
                     ),
-                    Screenshot(
-                      controller: _screenshotController,
-                      child: InvitationCustomizationStep(
-                        formKey: _formKeys[2],
-                        selectedTemplate: _selectedTemplate,
-                      ),
+                    InvitationCustomizationStep(
+                      formKey: _formKeys[2],
+                      selectedTemplate: _selectedTemplate,
+                      screenshotController: _screenshotController,
                     ),
                     GuestListManagementStep(
                       formKey: _formKeys[3],
