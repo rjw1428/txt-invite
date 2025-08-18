@@ -2,7 +2,7 @@ import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/guest_list.dart';
 
 abstract class GuestListService {
-  Future<void> createGuestList(GuestList guestList);
+  Future<GuestList> createGuestList(GuestList guestList);
   Future<List<GuestList>> getGuestLists(String uid);
   Future<void> deleteGuestList(String id);
   Future<GuestList?> getGuestList(String guestListId);

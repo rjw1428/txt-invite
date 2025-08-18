@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<List<Event>> _fetchEvents() async {
-    final user = await Api().auth.currentUser;
+    final user = Api().auth.currentUser;
     if (user == null) {
       throw Exception('User not logged in');
     }

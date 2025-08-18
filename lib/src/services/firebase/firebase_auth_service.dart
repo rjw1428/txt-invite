@@ -19,7 +19,7 @@ class FirebaseAuthService implements AuthService {
     }
 
     @override
-    Future<User?> get currentUser async {
+    User? get currentUser {
       return _userFromFirebase(_auth.currentUser);
     }
 

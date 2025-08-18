@@ -79,7 +79,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         final screenCap = await _screenshotController.capture();
         if (screenCap != null) {
           try {
-            final user = await Api().auth.currentUser;
+            final user = Api().auth.currentUser;
             final imgUrl = await Api().storage.uploadBytes(
               screenCap,
               'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}_preview.png',
@@ -149,7 +149,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
         final testFilePath = _selectedTemplate;
         final file = File(testFilePath!);
-        final user = await Api().auth.currentUser;
+        final user = Api().auth.currentUser;
         final imgUrl = await Api().storage.uploadFile(
           file,
           'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}.png',
@@ -207,7 +207,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       const NeverScrollableScrollPhysics(), // Disable swiping
                   onPageChanged: (index) {
                     setState(() {
-                      print("STTING PAGE ${CreateEventSteps.values[index]}");
                       _currentPage = CreateEventSteps.values[index];
                     });
                   },

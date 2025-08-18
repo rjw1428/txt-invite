@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/guest_list.dart';
+import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/ui/screens/add_edit_guest_screen.dart';
 
 class GuestListDetailDialog extends StatefulWidget {
@@ -29,13 +30,13 @@ class _GuestListDetailDialogState extends State<GuestListDetailDialog> {
     _currentGuestList = widget.guestList;
   }
 
-  void _refreshGuestList() {
-    // This is a placeholder. In a real app, you'd re-fetch the guest list
-    // from your API or update it from a state management solution.
-    // For now, we'll just simulate an update.
-    setState(() {
-      // This will trigger a rebuild of the dialog content
-    });
+  void _refreshGuestList() async {
+    final updatedGuestList = await Api().guestLists.getGuestList(_currentGuestList.id!);
+    if (updatedGuestList != null) {
+      setState(() {
+        _currentGuestList = updatedGuestList;
+      });
+    }
   }
 
   @override
@@ -53,22 +54,18 @@ class _GuestListDetailDialogState extends State<GuestListDetailDialog> {
                   final guest = _currentGuestList.guests[index];
                   return ListTile(
                     onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Edit Guest'),
-                            content: AddEditGuestScreen(
-                              guest: guest,
-                              onSave: (updatedGuest) {
-                                widget.onSaveGuest(updatedGuest);
-                                _refreshGuestList(); // Refresh the dialog
-                                Navigator.of(context).pop(); // Close the AddEditGuestScreen dialog
-                              },
-                            ),
-                          );
-                        },
-                      );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddEditGuestScreen(
+                            guest: guest,
+                            onSave: (updatedGuest) async {
+                              await widget.onSaveGuest(updatedGuest);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ),
+                      ).then((_) => _refreshGuestList());
                     },
                     title: Text('${guest.firstName} ${guest.lastName}'),
                     subtitle: Text(guest.phoneNumber),
@@ -88,18 +85,17 @@ class _GuestListDetailDialogState extends State<GuestListDetailDialog> {
         TextButton(
           child: const Text('Add Guest'),
           onPressed: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AddEditGuestScreen(
-                  onSave: (newGuest) {
-                    widget.onSaveGuest(newGuest);
-                    _refreshGuestList(); // Refresh the dialog
-                    Navigator.of(context).pop(); // Close the AddEditGuestScreen dialog
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddEditGuestScreen(
+                  onSave: (newGuest) async {
+                    await widget.onSaveGuest(newGuest);
+                    Navigator.of(context).pop();
                   },
-                );
-              },
-            );
+                ),
+              ),
+            ).then((_) => _refreshGuestList());
           },
         ),
         TextButton(

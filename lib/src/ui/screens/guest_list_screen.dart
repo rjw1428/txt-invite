@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/guest_list.dart';
 import 'package:txt_invite/src/services/api.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:txt_invite/src/ui/widgets/guest_list_card.dart';
 
 class GuestListScreen extends StatefulWidget {
@@ -24,12 +23,11 @@ class _GuestListScreenState extends State<GuestListScreen> {
   }
 
   void _fetchGuestLists() {
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = Api().auth.currentUser;
     if (currentUser != null) {
-      _guestListsFuture = Api().guestLists.getGuestLists(currentUser.uid);
+      _guestListsFuture = Api().guestLists.getGuestLists(currentUser.id);
     } else {
-      _guestListsFuture = Future.value([]); // Return an empty list if no user
-    }
+      _guestListsFuture = Future.value([]);     }
   }
 
   Future<void> _createNewGuestList() async {
@@ -65,12 +63,12 @@ class _GuestListScreenState extends State<GuestListScreen> {
     );
 
     if (guestListName != null && guestListName.isNotEmpty) {
-      final currentUser = FirebaseAuth.instance.currentUser;
+      final currentUser = Api().auth.currentUser;
       if (currentUser != null) {
         try {
           final newGuestList = GuestList(
             name: guestListName,
-            createdBy: currentUser.uid,
+            createdBy: currentUser.id,
             guests: [],
           );
           await Api().guestLists.createGuestList(newGuestList);
@@ -108,9 +106,6 @@ class _GuestListScreenState extends State<GuestListScreen> {
   Future<void> _deleteGuest(String guestListId, Guest guest) async {
     try {
       await Api().guestLists.deleteGuest(guestListId, guest);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Guest deleted successfully!')),
-      );
       setState(() {
         _fetchGuestLists(); // Refresh the list
       });
@@ -125,14 +120,8 @@ class _GuestListScreenState extends State<GuestListScreen> {
     try {
       if (guest.id == null) {
         await Api().guestLists.addGuest(guestListId, guest);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Guest added successfully!')),
-        );
       } else {
         await Api().guestLists.updateGuest(guestListId, guest);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Guest updated successfully!')),
-        );
       }
       setState(() {
         _fetchGuestLists(); // Refresh the list
@@ -178,11 +167,6 @@ class _GuestListScreenState extends State<GuestListScreen> {
                 onDelete: () => _deleteGuestList(guestList.id!),
                 onDeleteGuest: (guest) => _deleteGuest(guestList.id!, guest),
                 onSaveGuest: (guest) => _saveGuest(guestList.id!, guest),
-                onGuestListChanged: () {
-                  setState(() {
-                    _fetchGuestLists(); // Refresh the list
-                  });
-                },
               );
             },
           );

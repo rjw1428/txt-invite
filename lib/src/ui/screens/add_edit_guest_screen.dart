@@ -5,7 +5,7 @@ import 'package:txt_invite/src/models/guest.dart';
 
 class AddEditGuestScreen extends StatefulWidget {
   final Guest? guest;
-  final Function(Guest) onSave;
+  final Future<void> Function(Guest) onSave;
 
   const AddEditGuestScreen({super.key, this.guest, required this.onSave});
 
@@ -116,12 +116,6 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
               TextFormField(
                 controller: _lastNameController,
                 decoration: const InputDecoration(labelText: 'Last Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a last name';
-                  }
-                  return null;
-                },
               ),
               TextFormField(
                 controller: _phoneNumberController,
@@ -135,7 +129,7 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     final newGuest = Guest(
                       id: widget.guest?.id, // Use existing ID if editing
@@ -143,8 +137,8 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
                       lastName: _lastNameController.text,
                       phoneNumber: _phoneNumberController.text,
                     );
-                    widget.onSave(newGuest);
-                    Navigator.of(context).pop();
+                    await widget.onSave(newGuest);
+                    Navigator.of(context).pop(newGuest);
                   }
                 },
                 child: const Text('Save'),
