@@ -46,6 +46,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   bool _rsvpRequired = true;
   GuestList? _guestList;
   Event? _event;
+  bool _isUploading = false;
+  String? _invitationThumbnailImageUrl;
 
   final ScreenshotController _screenshotController = ScreenshotController();
 
@@ -65,20 +67,31 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   void _nextPage(CreateEventSteps nextStep) async {
     if (_formKeys[_currentPage.index].currentState != null && _formKeys[_currentPage.index].currentState!.validate()) {
       if (_currentPage == CreateEventSteps.invitationCustomization) {
+        setState(() {
+          _isUploading = true;
+        });
         final screenCap = await _screenshotController.capture();
         if (screenCap != null) {
           try {
-            await Api().storage.uploadBytes(screenCap, 'invitations/${DateTime.now().millisecondsSinceEpoch}_preview.png');
-            // For debug
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Invitation preview captured successfully')),
-            );
+            final user = await Api().auth.currentUser;
+            final imgUrl = await Api().storage.uploadBytes(screenCap, 'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}_preview.png');
+            setState(() {
+              _invitationThumbnailImageUrl = imgUrl;
+              _isUploading = false;
+            });
           } catch (e) {
+            setState(() {
+              _isUploading = false;
+            });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Failed to upload invitation image: $e')),
             );
             return;
           }
+        } else {
+          setState(() {
+            _isUploading = false;
+          });
         }
       }
       _pageController.nextPage(
@@ -110,16 +123,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Future<void> _createEvent() async {
     if (_formKeys[_currentPage.index].currentState != null && _formKeys[_currentPage.index].currentState!.validate()) {
       try {
-        // final Uint8List? imageBytes = await _screenshotController.capture();
-
-        // if (imageBytes == null) {
-        //   throw Exception("Failed to capture invitation image");
-        // }
-
-        // final tempDir = await getTemporaryDirectory();
-        // final file = await File('${tempDir.path}/invitation.png').create();
-      
-        // final imageUrl = await Api().storage.uploadFile(file, 'invitations/${DateTime.now().millisecondsSinceEpoch}.png');
         final guestList = await Api().guestLists.getGuestList(_selectedGuestListId!);
         if (guestList == null) {
           throw Exception('Selected guest list not found');
@@ -137,6 +140,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           endTime: _endTime!,
           guestListId: _selectedGuestListId!,
           invitationImageUrl: imgUrl,
+          invitationImageThumbnailUrl: _invitationThumbnailImageUrl!,
           createdBy: user.id,
           status: EventStatus.active,
           inviteCount: guestList.guests.length,
@@ -168,7 +172,18 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       appBar: AppBar(
         title: const Text('Create New Event'),
       ),
-      body: Column(
+      body: _isUploading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Uploading invitation...'),
+                ],
+              ),
+            )
+          : Column(
               children: [
                 Expanded(
                   child: PageView(

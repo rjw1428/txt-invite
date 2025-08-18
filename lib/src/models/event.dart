@@ -11,6 +11,7 @@ class Event {
   final DateTime endTime;
   final String guestListId;
   final String invitationImageUrl;
+  final String invitationImageThumbnailUrl;
   final String createdBy;
   final List<Rsvp> rsvps;
   final int inviteCount;
@@ -24,6 +25,7 @@ class Event {
     required this.endTime,
     required this.guestListId,
     required this.invitationImageUrl,
+    required this.invitationImageThumbnailUrl,
     required this.createdBy,
     this.rsvps = const [],
     this.inviteCount = 0,
@@ -48,6 +50,7 @@ class Event {
     DateTime? endTime,
     String? guestListId,
     String? invitationImageUrl,
+    String? invitationImageThumbnailUrl,
     String? createdBy,
     List<Rsvp>? rsvps,
     int? inviteCount,
@@ -61,6 +64,7 @@ class Event {
       endTime: endTime ?? this.endTime,
       guestListId: guestListId ?? this.guestListId,
       invitationImageUrl: invitationImageUrl ?? this.invitationImageUrl,
+      invitationImageThumbnailUrl: invitationImageThumbnailUrl ?? this.invitationImageThumbnailUrl,
       createdBy: createdBy ?? this.createdBy,
       rsvps: rsvps ?? this.rsvps,
       inviteCount: inviteCount ?? this.inviteCount,
@@ -77,6 +81,7 @@ class Event {
       endTime: (map['endTime'] as Timestamp).toDate(),
       guestListId: (map['guestListId'] as DocumentReference).id,
       invitationImageUrl: map['invitationImageUrl'],
+      invitationImageThumbnailUrl: map['invitationImageThumbnailUrl'],
       createdBy: map['createdBy'],
       rsvps: (map['rsvps'] as List<dynamic>).map((e) => Rsvp.fromMap(e)).toList(),
       inviteCount: map['inviteCount'] ?? 99,
@@ -92,6 +97,7 @@ class Event {
       'endTime': Timestamp.fromDate(endTime),
       'guestListId': FirebaseFirestore.instance.collection('guest_lists').doc(guestListId),
       'invitationImageUrl': invitationImageUrl,
+      'invitationImageThumbnailUrl': invitationImageThumbnailUrl,
       'createdBy': createdBy,
       'rsvps': rsvps.map((rsvp) => rsvp.toMap()).toList(),
       'inviteCount': inviteCount,

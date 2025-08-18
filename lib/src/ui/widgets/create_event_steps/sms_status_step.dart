@@ -27,7 +27,6 @@ class _SmsStatusScreenState extends State<SmsStatusScreen> {
 
   @override
   void initState() {
-    print('HERE');
     super.initState();
     for (final guest in widget.guestList?.guests ?? []) {
       _smsStatus[guest.id!] = SmsStatus.pending;
@@ -43,7 +42,7 @@ class _SmsStatusScreenState extends State<SmsStatusScreen> {
           _smsStatus[guest.id!] == SmsStatus.sending) {
         continue; // Skip already sent or sending guests
       }
-      
+
       setState(() {
         _smsStatus[guest.id!] = SmsStatus.sending;
       });
@@ -75,6 +74,10 @@ class _SmsStatusScreenState extends State<SmsStatusScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
+          const Text(
+              'Sending Invite Messages',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
           ListView.builder(
             itemCount: widget.guestList?.guests.length ?? 0,
             itemBuilder: (context, index) {
