@@ -114,7 +114,7 @@ class FirebaseEventService implements EventService {
   @override
   Future<void> cancelEvent(String eventId) async {
     await _firestore.collection('events').doc(eventId).update({
-      'status': EventStatus.cancelled,
+      'status': EventStatus.cancelled.toString(),
     });
   }
 }

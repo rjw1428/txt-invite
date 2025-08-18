@@ -72,9 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const CreateEventScreen()),
+            MaterialPageRoute(builder: (context) => CreateEventScreen(onComplete: _refreshEvents,)),
           );
-          // _refreshEvents();
         },
         child: const Icon(Icons.add),
       ),

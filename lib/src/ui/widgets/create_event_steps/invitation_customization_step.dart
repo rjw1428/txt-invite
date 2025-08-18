@@ -81,7 +81,7 @@ class _InvitationCustomizationStepState
                           style: GoogleFonts.getFont(
                             _fontFamily,
                             fontSize: _fontSize,
-                            color: _textColor,
+                          color: _textColor,
                           ),
                         ),
                       ),

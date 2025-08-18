@@ -13,18 +13,20 @@ import 'package:txt_invite/src/ui/widgets/create_event_steps/invitation_customiz
 import 'package:txt_invite/src/ui/widgets/create_event_steps/sms_status_step.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/template_selection_step.dart';
 
-
-enum CreateEventSteps { 
+enum CreateEventSteps {
   eventDetails,
   templateSelection,
   invitationCustomization,
   guestListManagement,
   eventSettings,
   confirmation,
-  smsStatus
+  smsStatus,
 }
+
 class CreateEventScreen extends StatefulWidget {
-  const CreateEventScreen({super.key});
+  const CreateEventScreen({super.key, required this.onComplete});
+
+  final VoidCallback onComplete;
 
   @override
   State<CreateEventScreen> createState() => _CreateEventScreenState();
@@ -34,7 +36,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final PageController _pageController = PageController();
   CreateEventSteps _currentPage = CreateEventSteps.eventDetails;
 
-  final List<GlobalKey<FormState>> _formKeys = List.generate(6, (_) => GlobalKey<FormState>());
+  final List<GlobalKey<FormState>> _formKeys = List.generate(
+    6,
+    (_) => GlobalKey<FormState>(),
+  );
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _startTime;
@@ -46,7 +51,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   bool _rsvpRequired = true;
   GuestList? _guestList;
   Event? _event;
-  bool _isUploading = false;
+  bool _isLoading = false;
   String? _invitationThumbnailImageUrl;
 
   final ScreenshotController _screenshotController = ScreenshotController();
@@ -65,23 +70,27 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   void _nextPage(CreateEventSteps nextStep) async {
-    if (_formKeys[_currentPage.index].currentState != null && _formKeys[_currentPage.index].currentState!.validate()) {
+    if (_formKeys[_currentPage.index].currentState != null &&
+        _formKeys[_currentPage.index].currentState!.validate()) {
       if (_currentPage == CreateEventSteps.invitationCustomization) {
         setState(() {
-          _isUploading = true;
+          _isLoading = true;
         });
         final screenCap = await _screenshotController.capture();
         if (screenCap != null) {
           try {
             final user = await Api().auth.currentUser;
-            final imgUrl = await Api().storage.uploadBytes(screenCap, 'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}_preview.png');
+            final imgUrl = await Api().storage.uploadBytes(
+              screenCap,
+              'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}_preview.png',
+            );
             setState(() {
               _invitationThumbnailImageUrl = imgUrl;
-              _isUploading = false;
+              _isLoading = false;
             });
           } catch (e) {
             setState(() {
-              _isUploading = false;
+              _isLoading = false;
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Failed to upload invitation image: $e')),
@@ -90,7 +99,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           }
         } else {
           setState(() {
-            _isUploading = false;
+            _isLoading = false;
           });
         }
       }
@@ -103,7 +112,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all required fields before proceeding.')),
+        const SnackBar(
+          content: Text(
+            'Please complete all required fields before proceeding.',
+          ),
+        ),
       );
     }
   }
@@ -121,9 +134,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   Future<void> _createEvent() async {
-    if (_formKeys[_currentPage.index].currentState != null && _formKeys[_currentPage.index].currentState!.validate()) {
+    if (_formKeys[_currentPage.index].currentState != null &&
+        _formKeys[_currentPage.index].currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
       try {
-        final guestList = await Api().guestLists.getGuestList(_selectedGuestListId!);
+        final guestList = await Api().guestLists.getGuestList(
+          _selectedGuestListId!,
+        );
         if (guestList == null) {
           throw Exception('Selected guest list not found');
         }
@@ -131,7 +150,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         final testFilePath = _selectedTemplate;
         final file = File(testFilePath!);
         final user = await Api().auth.currentUser;
-        final imgUrl = await Api().storage.uploadFile(file, 'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}.png');
+        final imgUrl = await Api().storage.uploadFile(
+          file,
+          'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}.png',
+        );
         final newEvent = Event(
           id: '', // ID will be generated by Firestore
           title: _titleController.text,
@@ -157,11 +179,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           _event = event;
           _guestList = guestList;
           _currentPage = CreateEventSteps.smsStatus;
+          _isLoading = false;
         });
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create event: $e')),
-        );
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to create event: $e')));
       }
     }
   }
@@ -169,26 +195,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create New Event'),
-      ),
-      body: _isUploading
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Uploading invitation...'),
-                ],
-              ),
-            )
-          : Column(
-              children: [
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(), // Disable swiping
+      appBar: AppBar(title: const Text('Create New Event')),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics:
+                      const NeverScrollableScrollPhysics(), // Disable swiping
                   onPageChanged: (index) {
                     setState(() {
                       print("STTING PAGE ${CreateEventSteps.values[index]}");
@@ -226,7 +242,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       child: InvitationCustomizationStep(
                         formKey: _formKeys[2],
                         selectedTemplate: _selectedTemplate,
-                      )
+                      ),
                     ),
                     GuestListManagementStep(
                       formKey: _formKeys[3],
@@ -279,20 +295,30 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Do not show "Previous" button on the first step or last step
-                    if (CreateEventSteps.values.indexOf(_currentPage) > 0 && CreateEventSteps.values.indexOf(_currentPage) < CreateEventSteps.values.length - 1)
+                    if (CreateEventSteps.values.indexOf(_currentPage) > 0 &&
+                        CreateEventSteps.values.indexOf(_currentPage) <
+                            CreateEventSteps.values.length - 1)
                       ElevatedButton(
                         onPressed: () {
-                          final previousStep = CreateEventSteps.values[CreateEventSteps.values.indexOf(_currentPage) - 1];
+                          final previousStep =
+                              CreateEventSteps.values[CreateEventSteps.values
+                                      .indexOf(_currentPage) -
+                                  1];
                           print('back to $previousStep');
                           _previousPage(previousStep);
                         },
                         child: const Text('Previous'),
                       )
-                    else const SizedBox(width: 10,), // used to maintain spacing
-                    if (_currentPage != CreateEventSteps.smsStatus && _currentPage != CreateEventSteps.confirmation)
+                    else
+                      const SizedBox(width: 10), // used to maintain spacing
+                    if (_currentPage != CreateEventSteps.smsStatus &&
+                        _currentPage != CreateEventSteps.confirmation)
                       ElevatedButton(
                         onPressed: () {
-                          final nextStep = CreateEventSteps.values[CreateEventSteps.values.indexOf(_currentPage) + 1];
+                          final nextStep =
+                              CreateEventSteps.values[CreateEventSteps.values
+                                      .indexOf(_currentPage) +
+                                  1];
                           print('nextStep: $nextStep');
                           _nextPage(nextStep);
                         },
@@ -306,7 +332,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     else if (_currentPage == CreateEventSteps.smsStatus)
                       ElevatedButton(
                         onPressed: () {
-                          Navigator.of(context).pop(); 
+                          widget.onComplete();
+                          Navigator.of(context).pop();
                         },
                         child: const Text('Done'),
                       ),
@@ -314,7 +341,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
               ),
             ],
-          )
+          ),
+          if (_isLoading)
+            const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Processing...'),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

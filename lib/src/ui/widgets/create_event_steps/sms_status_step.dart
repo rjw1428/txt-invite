@@ -48,6 +48,7 @@ class _SmsStatusScreenState extends State<SmsStatusScreen> {
       });
       try {
         final success = await Api().messaging.sendMessage(guest, widget.event!);
+        print('Message send to ${guest.phoneNumber} success: $success');
         if (!success) {
           setState(() {
             _retry = true;
@@ -78,34 +79,30 @@ class _SmsStatusScreenState extends State<SmsStatusScreen> {
               'Sending Invite Messages',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-          ListView.builder(
-            itemCount: widget.guestList?.guests.length ?? 0,
-            itemBuilder: (context, index) {
-              final guest = widget.guestList?.guests[index];
-              final status = _smsStatus[guest?.id!];
-              return ListTile(
-                title: Text('${guest?.firstName} ${guest?.lastName}'),
-                subtitle: Text(guest?.phoneNumber ?? ''),
-                trailing: Icon(
-                  status == SmsStatus.sent
-                      ? Icons.check_circle
-                      : status == SmsStatus.failed
-                          ? Icons.error
-                          : Icons.pending,
-                  color: status == SmsStatus.sent
-                      ? Colors.green
-                      : status == SmsStatus.failed
-                          ? Colors.red
-                          : Colors.grey,
-                ),
-              );
-            },
-            // floatingActionButton: FloatingActionButton(
-            //   onPressed: () {
-            //     Navigator.of(context).popUntil((route) => route.isFirst);
-            //   },
-            //   child: const Icon(Icons.done),
-            // ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: widget.guestList?.guests.length ?? 0,
+              itemBuilder: (context, index) {
+                final guest = widget.guestList?.guests[index];
+                final status = _smsStatus[guest?.id!];
+                return ListTile(
+                  title: Text('${guest?.firstName} ${guest?.lastName}'),
+                  subtitle: Text(guest?.phoneNumber ?? ''),
+                  trailing: Icon(
+                    status == SmsStatus.sent
+                        ? Icons.check_circle
+                        : status == SmsStatus.failed
+                            ? Icons.error
+                            : Icons.pending,
+                    color: status == SmsStatus.sent
+                        ? Colors.green
+                        : status == SmsStatus.failed
+                            ? Colors.red
+                            : Colors.grey,
+                  ),
+                );
+              },
+            ),
           ),
           if (_retry)
             ElevatedButton(
