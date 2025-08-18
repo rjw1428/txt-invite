@@ -37,8 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     _currentUserId = user.id;
     final now = DateTime.now();
-    final filterTime = DateTime(now.year, now.month, now.day);
-    return Api().events.getActiveEvents(_currentUserId, filterTime);
+    return Api().events.getActiveEvents(_currentUserId, now);
   }
 
   @override

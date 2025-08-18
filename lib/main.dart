@@ -6,7 +6,7 @@ import 'package:txt_invite/src/services/firebase/firebase_auth_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_event_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_guest_list_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_storage_service.dart';
-import 'package:txt_invite/src/services/sms_service.dart';
+import 'package:txt_invite/src/services/telephony_service.dart';
 import 'package:txt_invite/src/ui/screens/event_history_screen.dart';
 import 'package:txt_invite/src/ui/screens/guest_list_screen.dart';
 import 'package:txt_invite/src/ui/screens/rsvp_screen.dart';
@@ -72,7 +72,8 @@ void main() async {
     FirebaseEventService(),
     FirebaseGuestListService(),
     FirebaseStorageService(),
-    SmsService(),
+    // SmsService(),
+    TelephonyService()
   );
 
   setPathUrlStrategy();

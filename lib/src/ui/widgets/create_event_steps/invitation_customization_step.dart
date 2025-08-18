@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:txt_invite/src/utils/constants.dart';
 
 class InvitationCustomizationStep extends StatefulWidget {
   const InvitationCustomizationStep(
@@ -21,12 +22,12 @@ class _InvitationCustomizationStepState
   final TextEditingController _invitationTextController =
       TextEditingController(text: 'Your Invitation Text Here');
   double _fontSize = 24.0;
-  String _fontFamily = 'Roboto'; // Default font
+  String _fontFamily = 'Roboto';
   Color _textColor = Colors.black;
-  Offset _textPosition = const Offset(50, 50); // Initial position
+  Offset _textPosition = const Offset(50, 50);
 
   XFile? _pickedImage;
-  Offset _imagePosition = const Offset(100, 200); // Initial position
+  Offset _imagePosition = const Offset(100, 200);
   double _imageScale = 1.0;
 
   @override
@@ -168,6 +169,7 @@ class _InvitationCustomizationStepState
                   },
                   items: GoogleFonts.asMap()
                       .keys
+                      .where((key) => FONTS.contains(key.toLowerCase()))
                       .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,

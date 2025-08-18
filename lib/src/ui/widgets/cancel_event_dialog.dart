@@ -22,6 +22,7 @@ class CancelEventDialogState extends State<CancelEventDialog> {
         key: _formKey,
         child: TextFormField(
           decoration: const InputDecoration(labelText: 'Reason for cancellation'),
+          maxLines: 3,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Please enter a reason';

@@ -68,10 +68,17 @@ class _RsvpScreenState extends State<RsvpScreen> {
       );
     }
 
-    if (_event == null || _guest == null) {
+    if (_event == null) {
       return Scaffold(
         appBar: AppBar(title: Text('RSVP')),
-        body: Center(child: Text('Error loading details')),
+        body: Center(child: Text('Error loading details: The event was not found. It may have been canceled. Check with the host')),
+      );
+    }
+
+    if (_guest == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text('RSVP')),
+        body: Center(child: Text('Error loading details: Your invitation was not found. Check wit hthe host')),
       );
     }
 
@@ -90,11 +97,13 @@ class _RsvpScreenState extends State<RsvpScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.network(
-                event.invitationImageUrl,
-                width: 400,
-                height: 300,
-                fit: BoxFit.cover,
+              Center(
+                child: Image.network(
+                  event.invitationImageUrl,
+                  width: 400,
+                  height: 300,
+                  fit: BoxFit.cover,
+                ),
               ),
               Text(
                 'Event: ${event.title}',

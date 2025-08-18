@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:txt_invite/src/utils/constants.dart';
 
 class EventDetailsStep extends StatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -55,6 +56,7 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
           children: [
             TextFormField(
               controller: widget.titleController,
+              textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(
                 labelText: 'Event Title',
               ),
@@ -67,6 +69,7 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
             ),
             TextFormField(
               controller: widget.descriptionController,
+              textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
                 labelText: 'Event Description',
               ),
@@ -81,7 +84,7 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
             ListTile(
               title: Text(widget.startTime == null
                   ? 'Select Start Date and Time'
-                  : 'Start: ${widget.startTime!.toLocal().toString().split('.')[0]}'),
+                  : 'Start: ${dateTimeFormat.format(widget.startTime!.toLocal())}'),
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
                 final date = await _selectDate(context, true);
@@ -102,7 +105,7 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
             ListTile(
               title: Text(widget.endTime == null
                   ? 'Select End Date and Time'
-                  : 'End: ${widget.endTime!.toLocal().toString().split('.')[0]}'),
+                  : 'End: ${dateTimeFormat.format(widget.endTime!.toLocal())}'),
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
                 final date = await _selectDate(context, true);

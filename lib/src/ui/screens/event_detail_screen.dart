@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/models/event.dart';
@@ -6,6 +5,7 @@ import 'package:txt_invite/src/models/guest_list.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 
 import 'package:txt_invite/src/services/api.dart';
+import 'package:txt_invite/src/utils/constants.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final String eventId;
@@ -53,13 +53,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Event Details'),
-        leading: (GoRouterState.of(context).extra is Map && (GoRouterState.of(context).extra as Map)['fromHome'] == true)
-            ? BackButton(
-                onPressed: () {
-                  GoRouter.of(context).go('/');
-                },
-              )
-            : null,
+        leading:
+            (GoRouterState.of(context).extra is Map &&
+                    (GoRouterState.of(context).extra as Map)['fromHome'] ==
+                        true)
+                ? BackButton(
+                  onPressed: () {
+                    GoRouter.of(context).go('/');
+                  },
+                )
+                : null,
       ),
       body: FutureBuilder<Event>(
         future: _eventFuture,
@@ -102,11 +105,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Starts: ${event.startTime.toLocal().toString().split('.')[0]}',
+                            'Starts: ${dateTimeFormat.format(event.startTime.toLocal())}',
                             style: const TextStyle(fontSize: 14),
                           ),
                           Text(
-                            'Ends: ${event.endTime.toLocal().toString().split('.')[0]}',
+                            'Ends: ${dateTimeFormat.format(event.endTime.toLocal())}',
                             style: const TextStyle(fontSize: 14),
                           ),
                           const SizedBox(height: 16),
@@ -123,10 +126,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               if (guestListSnapshot.connectionState ==
                                   ConnectionState.waiting) {
                                 return const Center(
-                                    child: CircularProgressIndicator());
+                                  child: CircularProgressIndicator(),
+                                );
                               } else if (guestListSnapshot.hasError) {
                                 return Center(
-                                    child: Text('Error: ${guestListSnapshot.error}'));
+                                  child: Text(
+                                    'Error: ${guestListSnapshot.error}',
+                                  ),
+                                );
                               } else if (!guestListSnapshot.hasData ||
                                   guestListSnapshot.data!.guests.isEmpty) {
                                 return const Text('No guests invited.');
@@ -134,14 +141,20 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 final guestList = guestListSnapshot.data!;
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: guestList.guests.map((guest) {
-                                    final rsvp = event.rsvps.firstWhere(
-                                      (r) => r.id == guest.id,
-                                      orElse: () => Rsvp(id: guest.id!, status: RsvpStatus.pending), // Default to pending if no RSVP found
-                                    );
-                                    return Text(
-                                        '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.status)})');
-                                  }).toList(),
+                                  children:
+                                      guestList.guests.map((guest) {
+                                        final rsvp = event.rsvps.firstWhere(
+                                          (r) => r.id == guest.id,
+                                          orElse:
+                                              () => Rsvp(
+                                                id: guest.id!,
+                                                status: RsvpStatus.pending,
+                                              ), // Default to pending if no RSVP found
+                                        );
+                                        return Text(
+                                          '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.status)})',
+                                        );
+                                      }).toList(),
                                 );
                               }
                             },

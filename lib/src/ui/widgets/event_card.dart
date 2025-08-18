@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/event_status.dart';
 import 'package:txt_invite/src/models/guest.dart';
@@ -9,6 +8,7 @@ import 'package:txt_invite/src/ui/widgets/cancel_event_dialog.dart';
 import 'package:txt_invite/src/ui/widgets/guest_list_detail_dialog.dart';
 
 import 'package:go_router/go_router.dart';
+import 'package:txt_invite/src/utils/constants.dart';
 
 class EventCard extends StatefulWidget {
   final Event event;
@@ -77,6 +77,9 @@ class _EventCardState extends State<EventCard> {
                   },
                 ),
           );
+        // For Debugging
+        } else if (value == 'delete_event') {
+          await Api().events.deleteEvent(widget.event.id);
         }
       },
       itemBuilder:
@@ -89,14 +92,16 @@ class _EventCardState extends State<EventCard> {
               value: 'cancel_event',
               child: Text('Cancel Event'),
             ),
+            const PopupMenuItem<String>(
+              value: 'delete_event',
+              child: Text('Delete Event'),
+            ),
           ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('MM/dd/yy hh:mm a');
-
     return InkWell(
       onTap: () {
         context.go('/events/${widget.event.id}', extra: {'fromHome': true});
@@ -126,10 +131,10 @@ class _EventCardState extends State<EventCard> {
               Text(widget.event.description),
               const SizedBox(height: 8),
               Text(
-                'Starts: ${dateFormat.format(widget.event.startTime.toLocal())}',
+                'Starts: ${dateTimeFormat.format(widget.event.startTime.toLocal())}',
               ),
               Text(
-                'Ends: ${dateFormat.format(widget.event.endTime.toLocal())}',
+                'Ends: ${dateTimeFormat.format(widget.event.endTime.toLocal())}',
               ),
               const SizedBox(height: 8),
               Row(

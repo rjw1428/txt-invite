@@ -39,7 +39,7 @@ class FirebaseEventService implements EventService {
         await _firestore
             .collection('events')
             .where('createdBy', isEqualTo: uid)
-            .where('startTime', isGreaterThanOrEqualTo: filterTime)
+            .where('endTime', isGreaterThanOrEqualTo: filterTime)
             .where('status', isEqualTo: EventStatus.active.toString())
             .get();
     return snapshot.docs.map((doc) {
