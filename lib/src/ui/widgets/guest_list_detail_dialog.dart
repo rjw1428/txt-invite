@@ -91,15 +91,12 @@ class _GuestListDetailDialogState extends State<GuestListDetailDialog> {
             showDialog(
               context: context,
               builder: (BuildContext context) {
-                return AlertDialog(
-                  title: const Text('Add Guest'),
-                  content: AddEditGuestScreen(
-                    onSave: (newGuest) {
-                      widget.onSaveGuest(newGuest);
-                      _refreshGuestList(); // Refresh the dialog
-                      Navigator.of(context).pop(); // Close the AddEditGuestScreen dialog
-                    },
-                  ),
+                return AddEditGuestScreen(
+                  onSave: (newGuest) {
+                    widget.onSaveGuest(newGuest);
+                    _refreshGuestList(); // Refresh the dialog
+                    Navigator.of(context).pop(); // Close the AddEditGuestScreen dialog
+                  },
                 );
               },
             );

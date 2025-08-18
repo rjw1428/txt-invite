@@ -31,9 +31,7 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.guest == null ? 'Add Guest' : 'Edit Guest'),
-      ),
+      backgroundColor: Colors.transparent,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
