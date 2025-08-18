@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:txt_invite/src/models/guest.dart';
+import 'package:txt_invite/src/ui/screens/contact_list_screen.dart';
 
 class AddEditGuestScreen extends StatefulWidget {
   final Guest? guest;
@@ -18,7 +19,6 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _phoneNumberController = TextEditingController();
-  late final List<Contact> contacts;
 
   @override
   void initState() {
@@ -26,14 +26,6 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
     _firstNameController.text = widget.guest?.firstName ?? '';
     _lastNameController.text = widget.guest?.lastName ?? '';
     _phoneNumberController.text = widget.guest?.phoneNumber ?? '';
-    _getContacts();
-  }
-
-  Future<void> _getContacts() async {
-    if (await FlutterContacts.requestPermission(readonly: true)) {
-      final importedContacts = await FlutterContacts.getContacts();
-      setState(() => contacts = importedContacts);
-    }
   }
 
   @override
@@ -79,55 +71,22 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              Autocomplete<Contact>(
-                optionsBuilder: (TextEditingValue textEditingValue) async {
-                  if (textEditingValue.text.isEmpty) {
-                    return const Iterable<Contact>.empty();
-                  }
-                  print('CONTACTS: ${contacts.length}');
-                  for (var i = 0; i < contacts.length && i < 10; i++) {
-                    print('Contact ${i + 1}: ${contacts[i].name.toString()}');
-                  }
-                  return contacts.where((contact) {
-                    final fullName = "${contact.name.first} ${contact.name.last}".toLowerCase();
-                    return fullName.contains(textEditingValue.text.toLowerCase());
-                  });
-                },
-                displayStringForOption: (Contact contact) => "${contact.name.first} ${contact.name.last}",
-                fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                  return TextFormField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    decoration: const InputDecoration(labelText: 'Search Contacts'),
+              ElevatedButton(
+                onPressed: () async {
+                  final contact = await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ContactListScreen()),
                   );
+                  if (contact != null && contact is Contact) {
+                    setState(() {
+                      _firstNameController.text = contact.name.first;
+                      _lastNameController.text = contact.name.last;
+                      if (contact.phones.isNotEmpty) {
+                        _phoneNumberController.text = contact.phones.first.number;
+                      }
+                    });
+                  }
                 },
-                optionsViewBuilder: (context, onSelected, options) {
-                  return Align(
-                    alignment: Alignment.topLeft,
-                    child: Material(
-                      child: SizedBox(
-                        height: 200,
-                        child: ListView.builder(
-                          itemCount: options.length,
-                          itemBuilder: (context, index) {
-                            final contact = options.elementAt(index);
-                            return ListTile(
-                              title: Text('${contact.name.first} ${contact.name.last}'),
-                              onTap: () {
-                                onSelected(contact);
-                                _firstNameController.text = contact.name.first;
-                                _lastNameController.text = contact.name.last;
-                                if (contact.phones.isNotEmpty) {
-                                  _phoneNumberController.text = contact.phones.first.number;
-                                }
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  );
-                },
+                child: const Text('Import from Contacts'),
               ),
               const SizedBox(height: 10),
               ElevatedButton(

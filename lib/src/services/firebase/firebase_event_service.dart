@@ -42,6 +42,11 @@ class FirebaseEventService implements EventService {
             .where('endTime', isGreaterThanOrEqualTo: filterTime)
             .where('status', isEqualTo: EventStatus.active.toString())
             .get();
+
+    if (snapshot.docs.isEmpty) {
+      return [];
+    }
+    
     return snapshot.docs.map((doc) {
       return Event.fromMap({'id': doc.id, ...doc.data()});
     }).toList();

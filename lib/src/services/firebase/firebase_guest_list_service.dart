@@ -39,6 +39,11 @@ class FirebaseGuestListService implements GuestListService {
   @override
   Future<List<GuestList>> getGuestLists(String uid) async {
     final snapshot = await _firestore.collection('guest_lists').where('createdBy', isEqualTo: uid).get();
+
+    if (snapshot.docs.isEmpty) {
+      return [];
+    }
+    
     return snapshot.docs.map((doc) => GuestList.fromMap({'id': doc.id, ...doc.data()})).toList();
   }
 
