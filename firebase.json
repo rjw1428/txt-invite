@@ -28,7 +28,11 @@
     ],
     "rewrites": [
       {
-        "source": "/rsvp",
+        "source": "/rsvp/**",
+        "function": "ogPreview"
+      },
+            {
+        "source": "/events/**",
         "function": "ogPreview"
       },
       {

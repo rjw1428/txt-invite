@@ -34,7 +34,7 @@ class _RsvpScreenState extends State<RsvpScreen> {
       if (event == null) {
         throw Exception('Event not found');
       }
-      final guest = await Api().guestLists.getGuest(event.id, widget.guestId);
+      final guest = await Api().events.getGuest(event.id, widget.guestId);
       if (guest == null) {
         throw Exception('Guest not found');
       }

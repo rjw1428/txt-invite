@@ -64,7 +64,7 @@ final _router = GoRouter(
     ),
 
     GoRoute(
-      path: '/guest-lists', // New route for GuestListScreen
+      path: '/guest-lists',
       builder: (context, state) => const GuestListScreen(),
     ),
     GoRoute(
@@ -85,7 +85,6 @@ void main() async {
     FirebaseEventService(),
     FirebaseGuestListService(),
     FirebaseStorageService(),
-    // SmsService(),
     TelephonyService(),
     FirebaseCommentService(),
   );

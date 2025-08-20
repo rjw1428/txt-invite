@@ -160,4 +160,16 @@ class FirebaseEventService implements EventService {
 
     return snapshot.docs.map((doc) => Guest.fromMap(doc.data())).toList();
   }
+
+  @override
+  Future<Guest?> getGuest(String eventId, String guestId) async {
+    final guestRef = _firestore.collection('events').doc(eventId).collection('guestList').doc(guestId);
+    final snapshot = await guestRef.get();
+
+    if (!snapshot.exists) {
+      return null;
+    }
+
+    return Guest.fromMap(snapshot.data()!);
+  }
 }

@@ -9,18 +9,16 @@ admin.initializeApp();
 export const ogPreview = onRequest(async (request, response) => {
   logger.info("OG Preview function called!", {structuredData: true});
 
-  fs.readdir("../../workspace", (err, files) => {
-    if (err) {
-      logger.error("Error reading directory:", err);
-      return;
-    }
-    logger.info("Directory contents:", files);
-  });
-  const eventId = request.query.eventId as string;
+  const eventId = request.params.eventId as string;
   const guestId = request.query.guestId as string;
 
-  if (!eventId || !guestId) {
+  if (!eventId) {
     response.status(400).send("Missing eventId or guestId");
+    return;
+  }
+
+  if (!guestId) {
+    response.status(400).send("Missing guestId");
     return;
   }
 
@@ -45,7 +43,9 @@ export const ogPreview = onRequest(async (request, response) => {
     const title = eventData.title || "Event Invitation";
     const description = eventData.description || "You're invited to an event!";
     const imageUrl = eventData.invitationImageThumbnailUrl || ""; // default ?
-    const url = `https://${process.env.GCLOUD_PROJECT}.web.app/rsvp/${eventId}?guestId=${guestId}`;
+    const url = eventData.settings.rsvpRequired ?
+      `https://${process.env.GCLOUD_PROJECT}.web.app/rsvp/${eventId}?guestId=${guestId}`:
+      `https://${process.env.GCLOUD_PROJECT}.web.app/events/${eventId}?guestId=${guestId}`;
 
     const ogTags = `
       <meta property="og:title" content="${title}" />

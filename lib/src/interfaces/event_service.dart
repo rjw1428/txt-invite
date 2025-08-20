@@ -15,4 +15,5 @@ abstract class EventService {
   Future<List<Guest>> addGuestListToEvent(String eventId, List<Guest> guestList); // Returns the guests with an ID assigned
   Future<Guest> addGuest(String eventId, Guest guest); // Returns guest with Id
   Future<List<Guest>> getGuests(String eventId);
+  Future<Guest?> getGuest(String eventId, String guestId);
 }
