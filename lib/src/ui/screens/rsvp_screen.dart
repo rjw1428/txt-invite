@@ -39,13 +39,19 @@ class _RsvpScreenState extends State<RsvpScreen> {
         throw Exception('Guest not found');
       }
 
+      final existingRsvp = event.rsvps.firstWhere(
+        (rsvp) => rsvp.id == guest.id,
+        orElse: () => Rsvp(id: guest.id!, status: RsvpStatus.pending),
+      );
+
+      if (existingRsvp.status != RsvpStatus.pending) {
+        GoRouter.of(context).go('/events/${widget.eventId}?guestId=${widget.guestId}');
+        return;
+      }
+
       setState(() {
         _event = event;
         _guest = guest;
-        final existingRsvp = event.rsvps.firstWhere(
-          (rsvp) => rsvp.id == guest.id,
-          orElse: () => Rsvp(id: guest.id!, status: RsvpStatus.pending),
-        );
         _selectedStatus = existingRsvp.status;
         _isLoading = false;
       });

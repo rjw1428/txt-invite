@@ -6,6 +6,7 @@ import 'package:txt_invite/src/services/firebase/firebase_auth_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_event_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_guest_list_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_storage_service.dart';
+import 'package:txt_invite/src/services/firebase/firebase_comment_service.dart';
 import 'package:txt_invite/src/services/telephony_service.dart';
 import 'package:txt_invite/src/ui/screens/event_history_screen.dart';
 import 'package:txt_invite/src/ui/screens/guest_list_screen.dart';
@@ -37,17 +38,29 @@ final _router = GoRouter(
       },
     ),
     GoRoute(
-      path: '/rsvp',
+      path: '/rsvp/:eventId',
       builder: (context, state) => RsvpScreen(
-        eventId: state.uri.queryParameters['eventId']!,
+        eventId: state.pathParameters['eventId']!,
         guestId: state.uri.queryParameters['guestId']!,
       ),
     ),
     GoRoute(
       path: '/events/:eventId',
-      builder: (context, state) => EventDetailScreen(
-        eventId: state.pathParameters['eventId']!,
-      ),
+      builder: (context, state) {
+        final eventId = state.pathParameters['eventId']!;
+        final guestId = state.uri.queryParameters['guestId'];
+        return EventDetailScreen(
+          eventId: eventId,
+          guestId: guestId,
+        );
+      },
+      redirect: (context, state) {
+        final guestId = state.uri.queryParameters['guestId'];
+        if (guestId == null && FirebaseAuth.instance.currentUser == null) {
+          return '/';
+        }
+        return null;
+      },
     ),
 
     GoRoute(
@@ -73,7 +86,8 @@ void main() async {
     FirebaseGuestListService(),
     FirebaseStorageService(),
     // SmsService(),
-    TelephonyService()
+    TelephonyService(),
+    FirebaseCommentService(),
   );
 
   setPathUrlStrategy();

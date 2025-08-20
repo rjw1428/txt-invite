@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:txt_invite/src/models/comment.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/guest_list.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
@@ -9,8 +12,9 @@ import 'package:txt_invite/src/utils/constants.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final String eventId;
+  final String? guestId;
 
-  const EventDetailScreen({super.key, required this.eventId});
+  const EventDetailScreen({super.key, required this.eventId, this.guestId});
 
   @override
   State<EventDetailScreen> createState() => _EventDetailScreenState();
@@ -19,6 +23,7 @@ class EventDetailScreen extends StatefulWidget {
 class _EventDetailScreenState extends State<EventDetailScreen> {
   late Future<Event> _eventFuture;
   late Future<GuestList?> _guestListFuture;
+  final _commentController = TextEditingController();
 
   @override
   void initState() {
@@ -46,6 +51,70 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       default:
         return 'Pending';
     }
+  }
+
+  Future<void> _addComment() async {
+    if (_commentController.text.isNotEmpty) {
+      String author = 'Anonymous';
+      if (widget.guestId != null) {
+        final guestList = await _guestListFuture;
+        if (guestList != null) {
+          final guest = guestList.guests.firstWhere((g) => g.id == widget.guestId);
+          author = '${guest.firstName} ${guest.lastName}';
+        }
+      } else {
+        author = FirebaseAuth.instance.currentUser?.displayName ?? 'Anonymous';
+      }
+      final comment = Comment(
+        id: '', // Firestore will generate the ID
+        text: _commentController.text,
+        author: author,
+        createdAt: Timestamp.now(),
+      );
+      await Api().comments.addComment(widget.eventId, comment);
+      _commentController.clear();
+    }
+  }
+
+  Future<void> _showRsvpConfirmationDialog(RsvpStatus newStatus) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm RSVP'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Are you sure you want to change your RSVP to ${_getRsvpStatusString(newStatus)}?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Confirm'),
+              onPressed: () {
+                Api().events.updateRsvp(
+                  eventId: widget.eventId,
+                  guestId: widget.guestId!,
+                  status: newStatus,
+                );
+                Navigator.of(context).pop();
+                setState(() {
+                  _eventFuture = _fetchEvent();
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -151,13 +220,90 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                                 status: RsvpStatus.pending,
                                               ), // Default to pending if no RSVP found
                                         );
-                                        return Text(
-                                          '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.status)})',
-                                        );
+                                        if (guest.id == widget.guestId) {
+                                          return Row(
+                                            children: [
+                                              Text(
+                                                '- ${guest.firstName} ${guest.lastName}',
+                                              ),
+                                              const SizedBox(width: 8),
+                                              DropdownButton<RsvpStatus>(
+                                                value: rsvp.status,
+                                                onChanged: (newStatus) {
+                                                  if (newStatus != null) {
+                                                    _showRsvpConfirmationDialog(newStatus);
+                                                  }
+                                                },
+                                                items: RsvpStatus.values
+                                                    .map((status) => DropdownMenuItem(
+                                                          value: status,
+                                                          child: Text(_getRsvpStatusString(status)),
+                                                        ))
+                                                    .toList(),
+                                              ),
+                                            ],
+                                          );
+                                        } else {
+                                          return Text(
+                                            '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.status)})',
+                                          );
+                                        }
                                       }).toList(),
                                 );
                               }
                             },
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Comments:',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          StreamBuilder<List<Comment>>(
+                            stream: Api().comments.getComments(widget.eventId),
+                            builder: (context, commentSnapshot) {
+                              if (commentSnapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              } else if (commentSnapshot.hasError) {
+                                return Center(
+                                  child: Text(
+                                    'Error: ${commentSnapshot.error}',
+                                  ),
+                                );
+                              } else if (!commentSnapshot.hasData ||
+                                  commentSnapshot.data!.isEmpty) {
+                                return const Text('No comments yet.');
+                              } else {
+                                final comments = commentSnapshot.data!;
+                                return ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: comments.length,
+                                  itemBuilder: (context, index) {
+                                    final comment = comments[index];
+                                    return ListTile(
+                                      title: Text(comment.author),
+                                      subtitle: Text(comment.text),
+                                    );
+                                  },
+                                );
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _commentController,
+                            decoration: const InputDecoration(
+                              labelText: 'Add a comment',
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: _addComment,
+                            child: const Text('Add Comment'),
                           ),
                         ],
                       ),
