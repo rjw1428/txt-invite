@@ -17,9 +17,8 @@ class FirebaseGuestListService implements GuestListService {
   @override
   Future<GuestList> createGuestList(GuestList guestList) async {
     final doc = _firestore.collection('guest_lists').doc();
-    final newGuestList = guestList.copyWith(id: doc.id);
-    await doc.set(newGuestList.toJson());
-    return newGuestList;
+    await doc.set(guestList.toJson());
+    return guestList.copyWith(id: doc.id);
   }
 
   @override

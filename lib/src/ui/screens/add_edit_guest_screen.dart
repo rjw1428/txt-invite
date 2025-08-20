@@ -105,6 +105,7 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _firstNameController,
+                textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(labelText: 'First Name'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -115,6 +116,7 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
               ),
               TextFormField(
                 controller: _lastNameController,
+                textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(labelText: 'Last Name'),
               ),
               TextFormField(
@@ -137,7 +139,6 @@ class AddEditGuestScreenState extends State<AddEditGuestScreen> {
                       lastName: _lastNameController.text,
                       phoneNumber: _phoneNumberController.text,
                     );
-                    await widget.onSave(newGuest);
                     Navigator.of(context).pop(newGuest);
                   }
                 },

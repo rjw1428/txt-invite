@@ -23,14 +23,17 @@ class EventDetailsStep extends StatefulWidget {
   });
 
   @override
-  State<EventDetailsStep> createState() => _EventDetailsStepState();
+  State<EventDetailsStep> createState() => EventDetailsStepState();
 }
 
-class _EventDetailsStepState extends State<EventDetailsStep> {
-  Future<DateTime?> _selectDate(BuildContext context, bool isStartTime) async {
+class EventDetailsStepState extends State<EventDetailsStep> {
+  String? _startTimeError;
+  String? _endTimeError;
+
+  Future<DateTime?> _selectDate(BuildContext context, DateTime? startDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: startDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
@@ -41,9 +44,33 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
     final now = TimeOfDay.now();
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay(hour: now.hour + 1, minute: 0),
+      initialTime: TimeOfDay(hour: now.hour + (isStartTime ? 1 : 2), minute: 0),
     );
     return picked;
+  }
+
+  bool _validateDateTimeFields() {
+    setState(() {
+      _startTimeError = null;
+      _endTimeError = null;
+
+      if (widget.startTime == null) {
+        _startTimeError = 'Please select a start date and time';
+      }
+      if (widget.endTime == null) {
+        _endTimeError = 'Please select an end date and time';
+      }
+      if (widget.startTime != null && widget.endTime != null && widget.endTime!.isBefore(widget.startTime!)) {
+        _endTimeError = 'End time cannot be before start time';
+      }
+    });
+    return _startTimeError == null && _endTimeError == null;
+  }
+
+  bool validateAndSave() {
+    final formValid = widget.formKey.currentState!.validate();
+    final dateTimeValid = _validateDateTimeFields();
+    return formValid && dateTimeValid;
   }
 
   @override
@@ -87,7 +114,7 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
                   : 'Start: ${dateTimeFormat.format(widget.startTime!.toLocal())}'),
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
-                final date = await _selectDate(context, true);
+                final date = await _selectDate(context, null);
                 if (date != null) {
                   final time = await _selectTime(context, true);
                   if (time != null) {
@@ -102,15 +129,23 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
                 }
               },
             ),
+            if (_startTimeError != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, top: 4.0),
+                child: Text(
+                  _startTimeError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
+                ),
+              ),
             ListTile(
               title: Text(widget.endTime == null
                   ? 'Select End Date and Time'
                   : 'End: ${dateTimeFormat.format(widget.endTime!.toLocal())}'),
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
-                final date = await _selectDate(context, true);
+                final date = await _selectDate(context, widget.startTime);
                 if (date != null) {
-                  final time = await _selectTime(context, true);
+                  final time = await _selectTime(context, false);
                   if (time != null) {
                     widget.onEndTimeChanged(DateTime(
                       date.year,
@@ -123,6 +158,14 @@ class _EventDetailsStepState extends State<EventDetailsStep> {
                 }
               },
             ),
+            if (_endTimeError != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, top: 4.0),
+                child: Text(
+                  _endTimeError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
+                ),
+              ),
           ],
         ),
       ),

@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:txt_invite/src/interfaces/event_service.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/event_status.dart';
-import 'package:txt_invite/src/models/guest_list.dart';
+import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 
 class FirebaseEventService implements EventService {
@@ -85,16 +85,14 @@ class FirebaseEventService implements EventService {
     }
     final eventData = {'id': eventId, ...eventDoc.data()!};
     final event = Event.fromMap(eventData);
-    final guestRef = _firestore
-        .collection('guest_lists')
-        .doc(event.guestListId);
-    final guestDoc = await guestRef.get();
-    if (!guestDoc.exists) {
-      throw Exception('Guest List not found');
+
+    // Fetch guests from the subcollection
+    final guestListSnapshot = await eventRef.collection('guestList').get();
+    if (guestListSnapshot.docs.isEmpty) {
+      throw Exception('Guest List not found for this event');
     }
 
-    final guestData = {'id': event.guestListId, ...guestDoc.data()!};
-    final guests = GuestList.fromMap(guestData).guests;
+    final guests = guestListSnapshot.docs.map((doc) => Guest.fromMap(doc.data())).toList();
     try {
       // Verify guest is in the guest list
       guests.firstWhere((guest) => guest.id == guestId);
@@ -121,5 +119,45 @@ class FirebaseEventService implements EventService {
     await _firestore.collection('events').doc(eventId).update({
       'status': EventStatus.cancelled.toString(),
     });
+  }
+
+  @override
+  Future<List<Guest>> addGuestListToEvent(String eventId, List<Guest> guestList) async {
+    final eventRef = _firestore.collection('events').doc(eventId);
+    final guestListCollectionRef = eventRef.collection('guestList');
+
+    return Future.wait(guestList.map((guest) async {
+      final doc = guestListCollectionRef.doc();
+      final guestWithId = guest.copyWith(id: doc.id);
+      await doc.set(guestWithId.toJson());
+      return guestWithId;
+    }));
+  }
+
+ @override
+  Future<Guest> addGuest(String eventId, Guest guest) async {
+    final eventRef = _firestore.collection('events').doc(eventId);
+    final guestListCollectionRef = eventRef.collection('guestList');
+
+    final doc = guestListCollectionRef.doc();
+    final guestWithId = guest.copyWith(id: doc.id);
+    await doc.set(guestWithId.toJson());
+    await eventRef.update({
+      'inviteCount': FieldValue.increment(1),
+    });
+    return guestWithId;
+  }
+
+  @override
+  Future<List<Guest>> getGuests(String eventId) async {
+    final eventRef = _firestore.collection('events').doc(eventId);
+    final guestListCollectionRef = eventRef.collection('guestList');
+    final snapshot = await guestListCollectionRef.get();
+
+    if (snapshot.docs.isEmpty) {
+      return [];
+    }
+
+    return snapshot.docs.map((doc) => Guest.fromMap(doc.data())).toList();
   }
 }

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/models/comment.dart';
 import 'package:txt_invite/src/models/event.dart';
-import 'package:txt_invite/src/models/guest_list.dart';
+import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 
 import 'package:txt_invite/src/services/api.dart';
@@ -22,7 +22,7 @@ class EventDetailScreen extends StatefulWidget {
 
 class _EventDetailScreenState extends State<EventDetailScreen> {
   late Future<Event> _eventFuture;
-  late Future<GuestList?> _guestListFuture;
+  late Future<List<Guest>> _guestListFuture;
   final _commentController = TextEditingController();
 
   @override
@@ -36,7 +36,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     if (event == null) {
       throw Exception('Event not found');
     }
-    _guestListFuture = Api().guestLists.getGuestList(event.guestListId);
+    _guestListFuture = Api().events.getGuests(event.id);
     return event;
   }
 
@@ -58,8 +58,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       String author = 'Anonymous';
       if (widget.guestId != null) {
         final guestList = await _guestListFuture;
-        if (guestList != null) {
-          final guest = guestList.guests.firstWhere((g) => g.id == widget.guestId);
+        if (guestList.isNotEmpty) {
+          final guest = guestList.firstWhere((g) => g.id == widget.guestId);
           author = '${guest.firstName} ${guest.lastName}';
         }
       } else {
@@ -86,7 +86,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Are you sure you want to change your RSVP to ${_getRsvpStatusString(newStatus)}?'),
+                Text(
+                  'Are you sure you want to change your RSVP to ${_getRsvpStatusString(newStatus)}?',
+                ),
               ],
             ),
           ),
@@ -182,129 +184,148 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             style: const TextStyle(fontSize: 14),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
-                            'Guests:',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                          if (event.settings.guestListVisible) ...[
+                            const Text(
+                              'Guests:',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          FutureBuilder<GuestList?>(
-                            future: _guestListFuture,
-                            builder: (context, guestListSnapshot) {
-                              if (guestListSnapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              } else if (guestListSnapshot.hasError) {
-                                return Center(
-                                  child: Text(
-                                    'Error: ${guestListSnapshot.error}',
-                                  ),
-                                );
-                              } else if (!guestListSnapshot.hasData ||
-                                  guestListSnapshot.data!.guests.isEmpty) {
-                                return const Text('No guests invited.');
-                              } else {
-                                final guestList = guestListSnapshot.data!;
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children:
-                                      guestList.guests.map((guest) {
-                                        final rsvp = event.rsvps.firstWhere(
-                                          (r) => r.id == guest.id,
-                                          orElse:
-                                              () => Rsvp(
-                                                id: guest.id!,
-                                                status: RsvpStatus.pending,
-                                              ), // Default to pending if no RSVP found
-                                        );
-                                        if (guest.id == widget.guestId) {
-                                          return Row(
-                                            children: [
-                                              Text(
-                                                '- ${guest.firstName} ${guest.lastName}',
-                                              ),
-                                              const SizedBox(width: 8),
-                                              DropdownButton<RsvpStatus>(
-                                                value: rsvp.status,
-                                                onChanged: (newStatus) {
-                                                  if (newStatus != null) {
-                                                    _showRsvpConfirmationDialog(newStatus);
-                                                  }
-                                                },
-                                                items: RsvpStatus.values
-                                                    .map((status) => DropdownMenuItem(
-                                                          value: status,
-                                                          child: Text(_getRsvpStatusString(status)),
-                                                        ))
-                                                    .toList(),
-                                              ),
-                                            ],
+
+                            FutureBuilder<List<Guest>>(
+                              future: _guestListFuture,
+                              builder: (context, guestListSnapshot) {
+                                if (guestListSnapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                } else if (guestListSnapshot.hasError) {
+                                  return Center(
+                                    child: Text(
+                                      'Error: ${guestListSnapshot.error}',
+                                    ),
+                                  );
+                                } else if (!guestListSnapshot.hasData ||
+                                    guestListSnapshot.data!.isEmpty) {
+                                  return const Text('No guests invited.');
+                                } else {
+                                  final guestList = guestListSnapshot.data!;
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children:
+                                        guestList.map((guest) {
+                                          final rsvp = event.rsvps.firstWhere(
+                                            (r) => r.id == guest.id,
+                                            orElse:
+                                                () => Rsvp(
+                                                  id: guest.id!,
+                                                  status: RsvpStatus.pending,
+                                                ), // Default to pending if no RSVP found
                                           );
-                                        } else {
-                                          return Text(
-                                            '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.status)})',
-                                          );
-                                        }
-                                      }).toList(),
-                                );
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Comments:',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                                          if (guest.id == widget.guestId) {
+                                            return Row(
+                                              children: [
+                                                Text(
+                                                  '- ${guest.firstName} ${guest.lastName}',
+                                                ),
+                                                const SizedBox(width: 8),
+                                                DropdownButton<RsvpStatus>(
+                                                  value: rsvp.status,
+                                                  onChanged: (newStatus) {
+                                                    if (newStatus != null) {
+                                                      _showRsvpConfirmationDialog(
+                                                        newStatus,
+                                                      );
+                                                    }
+                                                  },
+                                                  items:
+                                                      RsvpStatus.values
+                                                          .map(
+                                                            (
+                                                              status,
+                                                            ) => DropdownMenuItem(
+                                                              value: status,
+                                                              child: Text(
+                                                                _getRsvpStatusString(
+                                                                  status,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          )
+                                                          .toList(),
+                                                ),
+                                              ],
+                                            );
+                                          } else {
+                                            return Text(
+                                              '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.status)})',
+                                            );
+                                          }
+                                        }).toList(),
+                                  );
+                                }
+                              },
                             ),
-                          ),
-                          StreamBuilder<List<Comment>>(
-                            stream: Api().comments.getComments(widget.eventId),
-                            builder: (context, commentSnapshot) {
-                              if (commentSnapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              } else if (commentSnapshot.hasError) {
-                                return Center(
-                                  child: Text(
-                                    'Error: ${commentSnapshot.error}',
-                                  ),
-                                );
-                              } else if (!commentSnapshot.hasData ||
-                                  commentSnapshot.data!.isEmpty) {
-                                return const Text('No comments yet.');
-                              } else {
-                                final comments = commentSnapshot.data!;
-                                return ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: comments.length,
-                                  itemBuilder: (context, index) {
-                                    final comment = comments[index];
-                                    return ListTile(
-                                      title: Text(comment.author),
-                                      subtitle: Text(comment.text),
-                                    );
-                                  },
-                                );
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: _commentController,
-                            decoration: const InputDecoration(
-                              labelText: 'Add a comment',
+                            const SizedBox(height: 16),
+                          ],
+                          if (event.settings.allowComments) ...[
+                            const Text(
+                              'Comments:',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          TextButton(
-                            onPressed: _addComment,
-                            child: const Text('Add Comment'),
-                          ),
+                            StreamBuilder<List<Comment>>(
+                              stream: Api().comments.getComments(
+                                widget.eventId,
+                              ),
+                              builder: (context, commentSnapshot) {
+                                if (commentSnapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                } else if (commentSnapshot.hasError) {
+                                  return Center(
+                                    child: Text(
+                                      'Error: ${commentSnapshot.error}',
+                                    ),
+                                  );
+                                } else if (!commentSnapshot.hasData ||
+                                    commentSnapshot.data!.isEmpty) {
+                                  return const Text('No comments yet.');
+                                } else {
+                                  final comments = commentSnapshot.data!;
+                                  return ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: comments.length,
+                                    itemBuilder: (context, index) {
+                                      final comment = comments[index];
+                                      return ListTile(
+                                        title: Text(comment.author),
+                                        subtitle: Text(comment.text),
+                                      );
+                                    },
+                                  );
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _commentController,
+                              decoration: const InputDecoration(
+                                labelText: 'Add a comment',
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: _addComment,
+                              child: const Text('Add Comment'),
+                            ),
+                          ],
                         ],
                       ),
                     ),

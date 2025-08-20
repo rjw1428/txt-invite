@@ -65,7 +65,7 @@ class _TemplateSelectionStepState extends State<TemplateSelectionStep> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      height: 500, // Give the GridView a fixed height
+                      height: 300, // Give the GridView a fixed height
                       child: GridView.builder(
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(

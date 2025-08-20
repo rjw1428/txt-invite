@@ -5,9 +5,9 @@ abstract class GuestListService {
   Future<GuestList> createGuestList(GuestList guestList);
   Future<List<GuestList>> getGuestLists(String uid);
   Future<void> deleteGuestList(String id);
-  Future<GuestList?> getGuestList(String guestListId);
-  Future<Guest?> getGuest(String guestListId, String guestId);
-  Future<void> deleteGuest(String guestListId, Guest guest);
-  Future<void> addGuest(String guestListId, Guest guest);
-  Future<void> updateGuest(String guestListId, Guest guest);
+  Future<GuestList?> getGuestList(String eventId);
+  Future<Guest?> getGuest(String eventId, String guestId);
+  Future<void> deleteGuest(String eventId, Guest guest);
+  Future<void> addGuest(String eventId, Guest guest);
+  Future<void> updateGuest(String eventId, Guest guest);
 }

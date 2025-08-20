@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:txt_invite/src/models/event.dart';
-import 'package:txt_invite/src/models/guest_list.dart';
+import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/services/api.dart';
 
 enum SmsStatus {
@@ -13,7 +13,7 @@ enum SmsStatus {
 
 class SmsStatusScreen extends StatefulWidget {
   final Event? event;
-  final GuestList? guestList;
+  final List<Guest>? guestList;
 
   const SmsStatusScreen({super.key, required this.event, required this.guestList});
 
@@ -28,7 +28,7 @@ class _SmsStatusScreenState extends State<SmsStatusScreen> {
   @override
   void initState() {
     super.initState();
-    for (final guest in widget.guestList?.guests ?? []) {
+    for (final guest in widget.guestList ?? []) {
       _smsStatus[guest.id!] = SmsStatus.pending;
     }
     _sendSmsMessages();
@@ -36,7 +36,7 @@ class _SmsStatusScreenState extends State<SmsStatusScreen> {
 
   Future<void> _sendSmsMessages() async {
     setState(() => _retry = false);
-    for (final guest in widget.guestList?.guests ?? []) {
+    for (final guest in widget.guestList ?? []) {
 
       if (_smsStatus[guest.id!] == SmsStatus.sent ||
           _smsStatus[guest.id!] == SmsStatus.sending) {
@@ -81,9 +81,9 @@ class _SmsStatusScreenState extends State<SmsStatusScreen> {
             ),
           Expanded(
             child: ListView.builder(
-              itemCount: widget.guestList?.guests.length ?? 0,
+              itemCount: widget.guestList?.length ?? 0,
               itemBuilder: (context, index) {
-                final guest = widget.guestList?.guests[index];
+                final guest = widget.guestList?[index];
                 final status = _smsStatus[guest?.id!];
                 return ListTile(
                   title: Text('${guest?.firstName} ${guest?.lastName}'),

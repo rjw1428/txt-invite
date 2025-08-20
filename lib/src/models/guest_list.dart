@@ -6,8 +6,9 @@ class GuestList {
   final String name;
   final List<Guest> guests;
   final String createdBy;
+  final DateTime createdAt;
 
-  GuestList({this.id, required this.name, required this.guests, required this.createdBy});
+  GuestList({this.id, required this.name, required this.guests, required this.createdBy, required this.createdAt});
 
   Map<String, dynamic> toJson() {
     return {
@@ -26,6 +27,7 @@ class GuestList {
           .map((guestData) => Guest.fromMap(guestData))
           .toList(),
       createdBy: data['createdBy'] ?? '',
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
@@ -35,15 +37,17 @@ class GuestList {
       name: data['name'],
       guests: List<Guest>.from(data['guests'].map((guest) => Guest.fromMap(guest))),
       createdBy: data['createdBy'] ?? '',
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
-  GuestList copyWith({required String id, String? name, List<Guest>? guests, String? createdBy}) {
+  GuestList copyWith({required String id, String? name, List<Guest>? guests, String? createdBy, DateTime? createdAt}) {
     return GuestList(
       id: id,
       name: name ?? this.name,
       guests: guests ?? this.guests,
       createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

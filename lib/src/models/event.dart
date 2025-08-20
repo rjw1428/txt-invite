@@ -2,6 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:txt_invite/src/models/event_settings.dart';
 import 'package:txt_invite/src/models/event_status.dart';
+import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 
 class Event {
@@ -10,7 +11,6 @@ class Event {
   final String description;
   final DateTime startTime;
   final DateTime endTime;
-  final String guestListId;
   final String invitationImageUrl;
   final String invitationImageThumbnailUrl;
   final String createdBy;
@@ -18,6 +18,7 @@ class Event {
   final int inviteCount;
   final EventStatus status;
   final EventSettings settings;
+  final List<Guest> guestList;
 
   Event({
     required this.id,
@@ -25,7 +26,6 @@ class Event {
     required this.description,
     required this.startTime,
     required this.endTime,
-    required this.guestListId,
     required this.invitationImageUrl,
     required this.invitationImageThumbnailUrl,
     required this.createdBy,
@@ -33,6 +33,7 @@ class Event {
     this.rsvps = const [],
     this.inviteCount = 0,
     this.status = EventStatus.active,
+    this.guestList = const [],
   });
 
   Map<RsvpStatus, int> get rsvpCounts {
@@ -51,7 +52,6 @@ class Event {
     String? description,
     DateTime? startTime,
     DateTime? endTime,
-    String? guestListId,
     String? invitationImageUrl,
     String? invitationImageThumbnailUrl,
     String? createdBy,
@@ -59,6 +59,7 @@ class Event {
     int? inviteCount,
     EventStatus? status,
     EventSettings? settings,
+    List<Guest>? guestList,
   }) {
     return Event(
       id: id ?? this.id,
@@ -66,7 +67,6 @@ class Event {
       description: description ?? this.description,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
-      guestListId: guestListId ?? this.guestListId,
       invitationImageUrl: invitationImageUrl ?? this.invitationImageUrl,
       invitationImageThumbnailUrl: invitationImageThumbnailUrl ?? this.invitationImageThumbnailUrl,
       createdBy: createdBy ?? this.createdBy,
@@ -74,6 +74,7 @@ class Event {
       inviteCount: inviteCount ?? this.inviteCount,
       status: status ?? this.status,
       settings: settings ?? this.settings,
+      guestList: guestList ?? this.guestList,
     );
   }
 
@@ -84,7 +85,7 @@ class Event {
       description: map['description'],
       startTime: (map['startTime'] as Timestamp).toDate(),
       endTime: (map['endTime'] as Timestamp).toDate(),
-      guestListId: (map['guestListId'] as DocumentReference).id,
+      
       invitationImageUrl: map['invitationImageUrl'],
       invitationImageThumbnailUrl: map['invitationImageThumbnailUrl'],
       createdBy: map['createdBy'],
@@ -92,6 +93,7 @@ class Event {
       inviteCount: map['inviteCount'] ?? 99,
       status: EventStatus.values.firstWhere((e) => e.toString() == map['status'], orElse: () => EventStatus.active),
       settings: EventSettings.fromMap(map['settings'] ?? {}),
+      guestList: (map['guestList'] as List<dynamic>?)?.map((e) => Guest.fromMap(e)).toList() ?? [],
     );
   }
 
@@ -101,7 +103,7 @@ class Event {
       'description': description,
       'startTime': Timestamp.fromDate(startTime),
       'endTime': Timestamp.fromDate(endTime),
-      'guestListId': FirebaseFirestore.instance.collection('guest_lists').doc(guestListId),
+      
       'invitationImageUrl': invitationImageUrl,
       'invitationImageThumbnailUrl': invitationImageThumbnailUrl,
       'createdBy': createdBy,

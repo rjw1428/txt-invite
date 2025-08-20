@@ -70,6 +70,7 @@ class _GuestListScreenState extends State<GuestListScreen> {
             name: guestListName,
             createdBy: currentUser.id,
             guests: [],
+            createdAt: DateTime.now()
           );
           await Api().guestLists.createGuestList(newGuestList);
           ScaffoldMessenger.of(context).showSnackBar(

@@ -1,10 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/event_status.dart';
 import 'package:txt_invite/src/models/event_settings.dart';
-import 'package:txt_invite/src/models/guest_list.dart';
+import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/confirmation_step.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/event_details_step.dart';
@@ -25,9 +26,7 @@ enum CreateEventSteps {
 }
 
 class CreateEventScreen extends StatefulWidget {
-  const CreateEventScreen({super.key, required this.onComplete});
-
-  final VoidCallback onComplete;
+  const CreateEventScreen({super.key,});
 
   @override
   State<CreateEventScreen> createState() => _CreateEventScreenState();
@@ -41,17 +40,17 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     6,
     (_) => GlobalKey<FormState>(),
   );
+  final GlobalKey<EventDetailsStepState> _eventDetailsStepKey = GlobalKey<EventDetailsStepState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _startTime;
   DateTime? _endTime;
   String? _selectedTemplate;
-  String? _selectedGuestListId;
   EventSettings _eventSettings = EventSettings();
-  GuestList? _guestList;
+  List<Guest> _selectedGuestList = [];
   Event? _event;
   bool _isLoading = false;
-  String? _invitationThumbnailImageUrl;
+  Uint8List? _invitationImage;
 
   final ScreenshotController _screenshotController = ScreenshotController();
 
@@ -69,37 +68,24 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   void _nextPage(CreateEventSteps nextStep) async {
-    if (_formKeys[_currentPage.index].currentState != null &&
-        _formKeys[_currentPage.index].currentState!.validate()) {
+    bool isValid = false;
+
+    if (_currentPage == CreateEventSteps.eventDetails) {
+      isValid = _eventDetailsStepKey.currentState?.validateAndSave() ?? false;
+    } else {
+      isValid = _formKeys[_currentPage.index].currentState?.validate() ?? false;
+    }
+
+    if (isValid) {
       if (_currentPage == CreateEventSteps.invitationCustomization) {
-        setState(() {
-          _isLoading = true;
-        });
-        final screenCap = await _screenshotController.capture();
-        if (screenCap != null) {
-          try {
-            final user = Api().auth.currentUser;
-            final imgUrl = await Api().storage.uploadBytes(
-              screenCap,
-              'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}_preview.png',
-            );
-            setState(() {
-              _invitationThumbnailImageUrl = imgUrl;
-              _isLoading = false;
-            });
-          } catch (e) {
-            setState(() {
-              _isLoading = false;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to upload invitation image: $e')),
-            );
-            return;
-          }
-        } else {
-          setState(() {
-            _isLoading = false;
-          });
+        try {
+          _invitationImage = await _screenshotController.capture();
+        } catch (e) {
+          print('Error capturing screenshot: $e');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to create invitation image: $e')),
+          );
+          return;
         }
       }
       _pageController.nextPage(
@@ -121,7 +107,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   void _previousPage(CreateEventSteps previousStep) {
-    if (previousStep != CreateEventSteps.eventDetails) {
+    if (_currentPage != CreateEventSteps.eventDetails) {
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
@@ -139,13 +125,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         _isLoading = true;
       });
       try {
-        final guestList = await Api().guestLists.getGuestList(
-          _selectedGuestListId!,
-        );
-        if (guestList == null) {
-          throw Exception('Selected guest list not found');
-        }
-
         final testFilePath = _selectedTemplate;
         final file = File(testFilePath!);
         final user = Api().auth.currentUser;
@@ -153,22 +132,30 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           file,
           'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}.png',
         );
+
+        final invitationThumbnailImageUrl = await Api().storage.uploadBytes(
+          _invitationImage!,
+          'invitations/${user.id}_${DateTime.now().millisecondsSinceEpoch}_preview.png',
+        );
         final newEvent = Event(
-          id: '', // ID will be generated by Firestore
+          id: '',
           title: _titleController.text,
           description: _descriptionController.text,
           startTime: _startTime!,
           endTime: _endTime!,
-          guestListId: _selectedGuestListId!,
           invitationImageUrl: imgUrl,
-          invitationImageThumbnailUrl: _invitationThumbnailImageUrl!,
+          invitationImageThumbnailUrl: invitationThumbnailImageUrl,
           createdBy: user.id,
           status: EventStatus.active,
-          inviteCount: guestList.guests.length,
+          inviteCount: _selectedGuestList.length,
           settings: _eventSettings,
         );
 
         final event = await Api().events.createEvent(newEvent);
+        final updatedGuestList = await Api().events.addGuestListToEvent(
+          event.id,
+          _selectedGuestList,
+        );
 
         _pageController.animateToPage(
           CreateEventSteps.smsStatus.index,
@@ -177,9 +164,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         );
         setState(() {
           _event = event;
-          _guestList = guestList;
           _currentPage = CreateEventSteps.smsStatus;
           _isLoading = false;
+          _selectedGuestList = updatedGuestList;
         });
       } catch (e) {
         setState(() {
@@ -212,6 +199,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   },
                   children: [
                     EventDetailsStep(
+                      key: _eventDetailsStepKey,
                       formKey: _formKeys[0],
                       titleController: _titleController,
                       descriptionController: _descriptionController,
@@ -243,9 +231,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     ),
                     GuestListManagementStep(
                       formKey: _formKeys[3],
-                      onGuestListSelected: (guestListId) {
+                      guestList: _selectedGuestList,
+                      onGuestListChanged: (guestList) {
                         setState(() {
-                          _selectedGuestListId = guestListId;
+                          _selectedGuestList = guestList;
                         });
                       },
                     ),
@@ -265,10 +254,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       startTime: _startTime,
                       endTime: _endTime,
                       selectedTemplate: _selectedTemplate,
-                      selectedGuestListId: _selectedGuestListId,
+                      guestList: _selectedGuestList,
                       settings: _eventSettings,
                     ),
-                    SmsStatusScreen(event: _event, guestList: _guestList),
+                    SmsStatusScreen(
+                      event: _event,
+                      guestList: _selectedGuestList,
+                    ),
                   ],
                 ),
               ),
@@ -315,7 +307,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     else if (_currentPage == CreateEventSteps.smsStatus)
                       ElevatedButton(
                         onPressed: () {
-                          widget.onComplete();
                           Navigator.of(context).pop();
                         },
                         child: const Text('Done'),
