@@ -12,9 +12,9 @@ import 'package:txt_invite/src/utils/constants.dart';
 class EventCard extends StatefulWidget {
   final Event event;
   final bool showActionMenu;
-  // final VoidCallback onUpdate;
+  final VoidCallback onUpdate;
 
-  const EventCard({super.key, required this.event, this.showActionMenu = true});
+  const EventCard({super.key, required this.event, this.showActionMenu = true, required this.onUpdate});
 
   @override
   State<EventCard> createState() => _EventCardState();
@@ -100,11 +100,11 @@ class _EventCardState extends State<EventCard> {
                 (context) => CancelEventDialog(
                   onConfirm: (reason) async {
                     await Api().events.cancelEvent(event.id);
-                    final guestList = await Api().guestLists.getGuestList(
+                    final guestList = await Api().events.getGuests(
                       event.id,
                     );
-                    if (guestList != null) {
-                      for (final guest in guestList.guests) {
+                    if (guestList.isNotEmpty) {
+                      for (final guest in guestList) {
                         await Api().messaging.sendCancellationMessage(
                           guest,
                           event,
@@ -118,6 +118,7 @@ class _EventCardState extends State<EventCard> {
           // For Debugging
         } else if (value == 'delete_event') {
           await Api().events.deleteEvent(event.id);
+          widget.onUpdate();
         }
       },
       itemBuilder:

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:txt_invite/src/models/guest.dart';
+import 'package:txt_invite/src/models/guest_list.dart';
 import 'package:txt_invite/src/ui/screens/add_edit_guest_screen.dart';
+import 'package:txt_invite/src/ui/widgets/select_saved_guest_list_dialog.dart';
 
 class GuestListManagementStep extends StatefulWidget {
   final Function(List<Guest>) onGuestListChanged;
@@ -131,6 +133,32 @@ class _GuestListManagementStepState extends State<GuestListManagementStep> {
             ElevatedButton(
               onPressed: addGuest,
               child: const Text('Add Guest'),
+            ),
+            const SizedBox(height: 8), // Add some spacing
+            ElevatedButton(
+              onPressed: () async {
+                final selectedGuestList = await showDialog<GuestList>(
+                  context: context,
+                  builder: (context) => const SelectSavedGuestListDialog(),
+                );
+                if (selectedGuestList != null) {
+                  setState(() {
+                    currentSelectedGuestList = selectedGuestList.guests;
+                  });
+                  widget.onGuestListChanged(currentSelectedGuestList);
+                }
+              },
+              child: const Text('Select from Saved Guest List'),
+            ),
+            const SizedBox(height: 8), // Add some spacing
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  currentSelectedGuestList.clear();
+                });
+                widget.onGuestListChanged(currentSelectedGuestList);
+              },
+              child: const Text('Clear Guest List'),
             ),
           ],
         ),

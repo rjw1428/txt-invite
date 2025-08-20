@@ -59,7 +59,7 @@ class _EventHistoryScreenState extends State<EventHistoryScreen> {
             itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {
               final event = snapshot.data![index];
-              return EventCard(event: event, showActionMenu: false);
+              return EventCard(event: event, showActionMenu: false, onUpdate: () => {},);
             },
           );
         },

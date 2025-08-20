@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemCount: snapshot.data!.length,
                 itemBuilder: (context, index) {
                   final event = snapshot.data![index];
-                  return EventCard(event: event);
+                  return EventCard(event: event, onUpdate: _refreshEvents);
                 },
               );
             }
