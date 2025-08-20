@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:txt_invite/src/utils/constants.dart';
+import 'package:txt_invite/src/ui/widgets/color_selection_dialog.dart';
 
 import 'package:screenshot/screenshot.dart';
 
@@ -189,6 +190,30 @@ class _InvitationCustomizationStepState
                       ),
                     );
                   }).toList(),
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  title: const Text('Text Color'),
+                  trailing: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: _textColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey, width: 1),
+                    ),
+                  ),
+                  onTap: () async {
+                    final selectedColor = await showDialog<Color>(
+                      context: context,
+                      builder: (context) => const ColorSelectionDialog(),
+                    );
+                    if (selectedColor != null) {
+                      setState(() {
+                        _textColor = selectedColor;
+                      });
+                    }
+                  },
                 ),
                 const SizedBox(height: 10),
                 ElevatedButton(

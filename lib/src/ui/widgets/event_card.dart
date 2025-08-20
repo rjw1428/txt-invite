@@ -84,7 +84,6 @@ class _EventCardState extends State<EventCard> {
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text(statusMessage)));
-              // onUpdate();
               setState(() {
                 event = event.copyWith(
                   guestList: [...event.guestList, guestWithId],
@@ -112,6 +111,7 @@ class _EventCardState extends State<EventCard> {
                         );
                       }
                     }
+                     widget.onUpdate();
                   },
                 ),
           );
