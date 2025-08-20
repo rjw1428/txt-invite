@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/event_status.dart';
+import 'package:txt_invite/src/models/event_settings.dart';
 import 'package:txt_invite/src/models/guest_list.dart';
 import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/confirmation_step.dart';
@@ -46,9 +47,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   DateTime? _endTime;
   String? _selectedTemplate;
   String? _selectedGuestListId;
-  bool _allowComments = true;
-  bool _guestListVisible = false;
-  bool _rsvpRequired = true;
+  EventSettings _eventSettings = EventSettings();
   GuestList? _guestList;
   Event? _event;
   bool _isLoading = false;
@@ -166,6 +165,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           createdBy: user.id,
           status: EventStatus.active,
           inviteCount: guestList.guests.length,
+          settings: _eventSettings,
         );
 
         final event = await Api().events.createEvent(newEvent);
@@ -251,22 +251,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     ),
                     EventSettingsStep(
                       formKey: _formKeys[4],
-                      allowComments: _allowComments,
-                      guestListVisible: _guestListVisible,
-                      rsvpRequired: _rsvpRequired,
-                      onAllowCommentsChanged: (value) {
+                      settings: _eventSettings,
+                      onSettingsChanged: (settings) {
                         setState(() {
-                          _allowComments = value;
-                        });
-                      },
-                      onGuestListVisibleChanged: (value) {
-                        setState(() {
-                          _guestListVisible = value;
-                        });
-                      },
-                      onRsvpRequiredChanged: (value) {
-                        setState(() {
-                          _rsvpRequired = value;
+                          _eventSettings = settings;
                         });
                       },
                     ),
@@ -278,9 +266,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       endTime: _endTime,
                       selectedTemplate: _selectedTemplate,
                       selectedGuestListId: _selectedGuestListId,
-                      allowComments: _allowComments,
-                      guestListVisible: _guestListVisible,
-                      rsvpRequired: _rsvpRequired,
+                      settings: _eventSettings,
                     ),
                     SmsStatusScreen(event: _event, guestList: _guestList),
                   ],

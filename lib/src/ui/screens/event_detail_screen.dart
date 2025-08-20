@@ -99,16 +99,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
             TextButton(
               child: const Text('Confirm'),
-              onPressed: () {
-                Api().events.updateRsvp(
+              onPressed: () async {
+                await Api().events.updateRsvp(
                   eventId: widget.eventId,
                   guestId: widget.guestId!,
                   status: newStatus,
                 );
-                Navigator.of(context).pop();
                 setState(() {
                   _eventFuture = _fetchEvent();
                 });
+                Navigator.of(context).pop();
               },
             ),
           ],

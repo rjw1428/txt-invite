@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:txt_invite/src/models/event_settings.dart';
 
 class ConfirmationStep extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -9,9 +10,7 @@ class ConfirmationStep extends StatelessWidget {
   final DateTime? endTime;
   final String? selectedTemplate;
   final String? selectedGuestListId;
-  final bool allowComments;
-  final bool guestListVisible;
-  final bool rsvpRequired;
+  final EventSettings settings;
 
   const ConfirmationStep({
     super.key,
@@ -22,9 +21,7 @@ class ConfirmationStep extends StatelessWidget {
     required this.endTime,
     required this.selectedTemplate,
     required this.selectedGuestListId,
-    required this.allowComments,
-    required this.guestListVisible,
-    required this.rsvpRequired,
+    required this.settings,
   });
 
   @override
@@ -46,9 +43,9 @@ class ConfirmationStep extends StatelessWidget {
             Text('End Time: ${endTime?.toLocal().toString().split('.')[0] ?? 'N/A'}'),
             Text('Selected Template: ${selectedTemplate ?? 'N/A'}'),
             Text('Selected Guest List ID: ${selectedGuestListId ?? 'N/A'}'),
-            Text('Allow Comments: ${allowComments ? 'Yes' : 'No'}'),
-            Text('Guest List Visible: ${guestListVisible ? 'Yes' : 'No'}'),
-            Text('RSVP Required: ${rsvpRequired ? 'Yes' : 'No'}'),
+            Text('Allow Comments: ${settings.allowComments ? 'Yes' : 'No'}'),
+            Text('Guest List Visible: ${settings.guestListVisible ? 'Yes' : 'No'}'),
+            Text('RSVP Required: ${settings.rsvpRequired ? 'Yes' : 'No'}'),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:txt_invite/src/models/event_settings.dart';
 import 'package:txt_invite/src/models/event_status.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 
@@ -16,6 +17,7 @@ class Event {
   final List<Rsvp> rsvps;
   final int inviteCount;
   final EventStatus status;
+  final EventSettings settings;
 
   Event({
     required this.id,
@@ -27,6 +29,7 @@ class Event {
     required this.invitationImageUrl,
     required this.invitationImageThumbnailUrl,
     required this.createdBy,
+    required this.settings,
     this.rsvps = const [],
     this.inviteCount = 0,
     this.status = EventStatus.active,
@@ -55,6 +58,7 @@ class Event {
     List<Rsvp>? rsvps,
     int? inviteCount,
     EventStatus? status,
+    EventSettings? settings,
   }) {
     return Event(
       id: id ?? this.id,
@@ -69,6 +73,7 @@ class Event {
       rsvps: rsvps ?? this.rsvps,
       inviteCount: inviteCount ?? this.inviteCount,
       status: status ?? this.status,
+      settings: settings ?? this.settings,
     );
   }
 
@@ -86,6 +91,7 @@ class Event {
       rsvps: (map['rsvps'] as List<dynamic>).map((e) => Rsvp.fromMap(e)).toList(),
       inviteCount: map['inviteCount'] ?? 99,
       status: EventStatus.values.firstWhere((e) => e.toString() == map['status'], orElse: () => EventStatus.active),
+      settings: EventSettings.fromMap(map['settings'] ?? {}),
     );
   }
 
@@ -102,6 +108,7 @@ class Event {
       'rsvps': rsvps.map((rsvp) => rsvp.toMap()).toList(),
       'inviteCount': inviteCount,
       'status': status.toString(),
+      'settings': settings.toMap(),
     };
   }
 }
