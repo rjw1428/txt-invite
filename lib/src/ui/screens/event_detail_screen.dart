@@ -228,12 +228,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   return const Text('No guests invited.');
                                 } else {
                                   final guestList = guestListSnapshot.data!;
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children:
-                                        guestList.map((guest) {
-                                          final rsvp = event.rsvps.firstWhere(
+                                  return event.settings.rsvpRequired
+                                      ? Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: guestList.map((guest) {
+                                            final rsvp = event.rsvps.firstWhere(
                                             (r) => r.id == guest.id,
                                             orElse:
                                                 () => Rsvp(
@@ -281,7 +281,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                             );
                                           }
                                         }).toList(),
-                                  );
+                                  )
+                                : Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: guestList.map((guest) {
+                                        return Text(
+                                          '- ${guest.firstName} ${guest.lastName}',
+                                        );
+                                      }).toList(),
+                                    );
                                 }
                               },
                             ),

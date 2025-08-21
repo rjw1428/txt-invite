@@ -4,6 +4,7 @@ import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 import 'package:txt_invite/src/services/api.dart';
+import 'package:txt_invite/src/utils/constants.dart';
 
 class RsvpScreen extends StatefulWidget {
   final String eventId;
@@ -118,6 +119,12 @@ class _RsvpScreenState extends State<RsvpScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              Text(
+                'Description: ${event.description}',
+              ),
+              Text(
+                'Date: ${dateTimeFormat.format(event.startTime)} - ${dateTimeFormat.format(event.endTime)}',
+              ),
               const SizedBox(height: 16),
               Text(
                 'Guest: ${guest.firstName} ${guest.lastName}',
@@ -134,7 +141,7 @@ class _RsvpScreenState extends State<RsvpScreen> {
                 ),
               const SizedBox(height: 16),
               DropdownButtonFormField<RsvpStatus>(
-                value: _selectedStatus,
+                value: _selectedStatus == RsvpStatus.pending ? null : _selectedStatus,
                 decoration: const InputDecoration(
                   labelText: 'Your RSVP',
                   border: OutlineInputBorder(),
@@ -180,7 +187,7 @@ class _RsvpScreenState extends State<RsvpScreen> {
                       );
                       GoRouter.of(
                         context,
-                      ).go('/events/${widget.eventId}');
+                      ).go('/events/${widget.eventId}?guestId=${widget.guestId}');
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

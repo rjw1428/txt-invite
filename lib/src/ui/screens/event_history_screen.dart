@@ -49,7 +49,7 @@ class _EventHistoryScreenState extends State<EventHistoryScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: SelectableText('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('No past events found.'));

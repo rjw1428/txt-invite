@@ -41,6 +41,8 @@ class FirebaseEventService implements EventService {
             .where('createdBy', isEqualTo: uid)
             .where('endTime', isGreaterThanOrEqualTo: filterTime)
             .where('status', isEqualTo: EventStatus.active.toString())
+            .orderBy('startTime')
+            .limit(10)
             .get();
 
     if (snapshot.docs.isEmpty) {
@@ -58,6 +60,8 @@ class FirebaseEventService implements EventService {
         await _firestore
             .collection('events')
             .where('createdBy', isEqualTo: uid)
+            .orderBy('startTime', descending: true)
+            .limit(10)
             .get();
     return snapshot.docs.map((doc) {
       return Event.fromMap({'id': doc.id, ...doc.data()});

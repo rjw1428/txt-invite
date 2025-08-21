@@ -19,7 +19,7 @@ class TelephonyService implements MessagingService {
     try {
       await messenger.sendSms(
         to: guest.phoneNumber,
-        message: "You are invited to the following event: $HOST/rsvp/${event.id}?guestId=${guest.id}",
+        message: "Hey ${guest.firstName}, I am inviting you to: $HOST/rsvp/${event.id}?guestId=${guest.id}",
         statusListener: (SendStatus status) {
           if (status == SendStatus.DELIVERED) {
             print('SMS delivered');
