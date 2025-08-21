@@ -330,11 +330,22 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     itemCount: comments.length,
                                     itemBuilder: (context, index) {
                                       final comment = comments[index];
-                                      return ListTile(
-                                        title: Text(comment.text),
-                                        subtitle: Text(comment.author),
-                                        trailing: Text(dateTimeFormat.format(comment.createdAt
-                                            .toDate())),
+                                      return Container(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              children: [
+                                                Text("${comment.author} - ", style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+                                                Text(dateTimeFormat.format(comment.createdAt
+                                                    .toDate()), style: const TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
+                                              ],
+                                            ),
+                                            Text(comment.text, style: const TextStyle(fontSize: 14)),
+                                          ],
+                                        ),
                                       );
                                     },
                                   );
@@ -342,15 +353,21 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               },
                             ),
                             const SizedBox(height: 16),
-                            TextField(
-                              controller: _commentController,
-                              decoration: const InputDecoration(
-                                labelText: 'Add a comment',
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: _addComment,
-                              child: const Text('Add Comment'),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _commentController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Add a comment',
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.send),
+                                  onPressed: _addComment,
+                                ),
+                              ],
                             ),
                           ],
                         ],

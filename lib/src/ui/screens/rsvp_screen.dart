@@ -45,7 +45,7 @@ class _RsvpScreenState extends State<RsvpScreen> {
         orElse: () => Rsvp(id: guest.id!, status: RsvpStatus.pending),
       );
 
-      if (existingRsvp.status != RsvpStatus.pending) {
+      if (existingRsvp.status != RsvpStatus.pending || !event.settings.rsvpRequired) {
         GoRouter.of(context).go('/events/${widget.eventId}?guestId=${widget.guestId}');
         return;
       }
