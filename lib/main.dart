@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,6 +14,7 @@ import 'package:txt_invite/src/ui/screens/guest_list_screen.dart';
 import 'package:txt_invite/src/ui/screens/rsvp_screen.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'firebase_options.dart';
+import 'package:txt_invite/src/ui/screens/dashboard_screen.dart';
 import 'package:txt_invite/src/ui/screens/home_screen.dart';
 import 'package:txt_invite/src/ui/screens/login_screen.dart';
 import 'package:txt_invite/src/ui/screens/event_detail_screen.dart';
@@ -22,20 +24,15 @@ final _router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) {
-        return StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasData) {
-              return const HomeScreen();
-            }
-            return const LoginScreen();
-          },
-        );
-      },
+      builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/dashboard',
+      builder: (context, state) => const DashboardScreen(),
     ),
     GoRoute(
       path: '/rsvp/:eventId',
@@ -57,12 +54,11 @@ final _router = GoRouter(
       redirect: (context, state) {
         final guestId = state.uri.queryParameters['guestId'];
         if (guestId == null && FirebaseAuth.instance.currentUser == null) {
-          return '/';
+          return '/login';
         }
         return null;
       },
     ),
-
     GoRoute(
       path: '/guest-lists',
       builder: (context, state) => const GuestListScreen(),
@@ -72,6 +68,32 @@ final _router = GoRouter(
       builder: (context, state) => const EventHistoryScreen(),
     ),
   ],
+  redirect: (context, state) {
+    final loggedIn = FirebaseAuth.instance.currentUser != null;
+    final loggingIn = state.matchedLocation == '/login';
+    final atRoot = state.matchedLocation == '/';
+    final atDashboard = state.matchedLocation == '/dashboard';
+
+    if (kIsWeb) {
+      if (!loggedIn && (loggingIn || atDashboard)) {
+        return '/login';
+      }
+
+      if (loggedIn && !loggingIn && atRoot) {
+        return '/dashboard';
+      }
+    } else {
+      if (!loggedIn) {
+        return '/login';
+      }
+
+      if (atRoot) {
+        return '/dashboard';
+      }
+    }
+
+    return null;
+  },
 );
 
 void main() async {

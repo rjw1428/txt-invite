@@ -141,7 +141,7 @@ class _GuestListScreenState extends State<GuestListScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            GoRouter.of(context).go('/');
+            GoRouter.of(context).go('/dashboard');
           },
         ),
         title: const Text('Manage Guest Lists'),

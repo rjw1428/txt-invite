@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/services/api.dart';
-import 'package:txt_invite/src/ui/screens/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,6 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _emailController.text,
           _passwordController.text,
         );
+        context.go('/dashboard');
       } catch (e) {
         // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -56,9 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _emailController.text,
           _passwordController.text,
         );
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+        context.go('/dashboard');
       } catch (e) {
         // Show error message
         ScaffoldMessenger.of(context).showSnackBar(

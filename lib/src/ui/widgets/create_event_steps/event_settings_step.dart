@@ -50,8 +50,8 @@ class _EventSettingsStepState extends State<EventSettingsStep> {
           ),
           SwitchListTile(
             title: const Text('Generate QR Code'),
-            value: false,
-            onChanged: (value) {},
+            value: widget.settings.qrCodeEnabled,
+            onChanged: (value) => widget.onSettingsChanged(widget.settings.copyWith(qrCodeEnabled: value)),
           ),
         ],
       ),

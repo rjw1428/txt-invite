@@ -19,6 +19,7 @@ class Event {
   final EventStatus status;
   final EventSettings settings;
   final List<Guest> guestList;
+  final String? qrCodeImageUrl;
 
   Event({
     required this.id,
@@ -34,6 +35,7 @@ class Event {
     this.inviteCount = 0,
     this.status = EventStatus.active,
     this.guestList = const [],
+    this.qrCodeImageUrl,
   });
 
   Map<RsvpStatus, int> get rsvpCounts {
@@ -60,6 +62,7 @@ class Event {
     EventStatus? status,
     EventSettings? settings,
     List<Guest>? guestList,
+    String? qrCodeImageUrl,
   }) {
     return Event(
       id: id ?? this.id,
@@ -75,6 +78,7 @@ class Event {
       status: status ?? this.status,
       settings: settings ?? this.settings,
       guestList: guestList ?? this.guestList,
+      qrCodeImageUrl: qrCodeImageUrl ?? this.qrCodeImageUrl,
     );
   }
 
@@ -85,7 +89,6 @@ class Event {
       description: map['description'],
       startTime: (map['startTime'] as Timestamp).toDate(),
       endTime: (map['endTime'] as Timestamp).toDate(),
-      
       invitationImageUrl: map['invitationImageUrl'],
       invitationImageThumbnailUrl: map['invitationImageThumbnailUrl'],
       createdBy: map['createdBy'],
@@ -94,6 +97,7 @@ class Event {
       status: EventStatus.values.firstWhere((e) => e.toString() == map['status'], orElse: () => EventStatus.active),
       settings: EventSettings.fromMap(map['settings'] ?? {}),
       guestList: (map['guestList'] as List<dynamic>?)?.map((e) => Guest.fromMap(e)).toList() ?? [],
+      qrCodeImageUrl: map['qrCodeImageUrl'],
     );
   }
 
@@ -103,9 +107,9 @@ class Event {
       'description': description,
       'startTime': Timestamp.fromDate(startTime),
       'endTime': Timestamp.fromDate(endTime),
-      
       'invitationImageUrl': invitationImageUrl,
       'invitationImageThumbnailUrl': invitationImageThumbnailUrl,
+      'qrCodeImageUrl': qrCodeImageUrl,
       'createdBy': createdBy,
       'rsvps': rsvps.map((rsvp) => rsvp.toMap()).toList(),
       'inviteCount': inviteCount,

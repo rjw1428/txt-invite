@@ -1,23 +1,30 @@
 import {onRequest} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
-import * as fs from "fs";
-import * as path from "path";
+import {readFileSync} from "fs";
+import {join} from "path";
 
 admin.initializeApp();
 
 export const ogPreview = onRequest(async (request, response) => {
   logger.info("OG Preview function called!", {structuredData: true});
 
-  const eventId = request.params.eventId as string;
+  // eventId from /rsvp/:eventId or /events/:eventId
+  const eventId = request.params[0].split("/")[1];
   const guestId = request.query.guestId as string;
 
   if (!eventId) {
-    response.status(400).send("Missing eventId or guestId");
+    logger.error(
+      `Missing eventId in request parameters: ${JSON.stringify(request.params)}`
+    );
+    response.status(400).send("Missing eventId");
     return;
   }
 
   if (!guestId) {
+    logger.error(
+      `Missing guestId in request query: ${JSON.stringify(request.query)}`
+    );
     response.status(400).send("Missing guestId");
     return;
   }
@@ -56,12 +63,12 @@ export const ogPreview = onRequest(async (request, response) => {
     `;
 
     // Read the index.html file
-    const indexPath = path.join(
+    const indexPath = join(
       __dirname,
       "../../workspace/public",
       "index.html"
     );
-    let indexHtml = fs.readFileSync(indexPath, "utf8");
+    let indexHtml = readFileSync(indexPath, "utf8");
 
     // Inject OG tags into the head section
     indexHtml = indexHtml.replace("<head>", `<head>${ogTags}`);

@@ -130,7 +130,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         true)
                 ? BackButton(
                   onPressed: () {
-                    GoRouter.of(context).go('/');
+                    GoRouter.of(context).go('/dashboard');
                   },
                 )
                 : null,
@@ -184,6 +184,22 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             style: const TextStyle(fontSize: 14),
                           ),
                           const SizedBox(height: 16),
+                          if (event.qrCodeImageUrl != null) ...[
+                            const Text(
+                              'QR Code:',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Image.network(
+                              event.qrCodeImageUrl!,
+                              width: 200,
+                              height: 200,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                           if (event.settings.guestListVisible) ...[
                             const Text(
                               'Guests:',
@@ -306,8 +322,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     itemBuilder: (context, index) {
                                       final comment = comments[index];
                                       return ListTile(
-                                        title: Text(comment.author),
-                                        subtitle: Text(comment.text),
+                                        title: Text(comment.text),
+                                        subtitle: Text(comment.author),
+                                        trailing: Text(dateTimeFormat.format(comment.createdAt
+                                            .toDate())),
                                       );
                                     },
                                   );

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/event_status.dart';
@@ -156,6 +157,27 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           event.id,
           _selectedGuestList,
         );
+
+        if (_eventSettings.qrCodeEnabled) {
+          final anonymousGuest = Guest(firstName: 'anonymous', lastName: '', phoneNumber: '');
+          final addedGuest = await Api().events.addGuest(event.id, anonymousGuest);
+
+          final qrPainter = QrPainter(
+            data: 'https://txt-invitation.web.app/events/${event.id}?guestId=${addedGuest.id}',
+            version: QrVersions.auto,
+            gapless: false,
+          );
+
+          final picData = await qrPainter.toImageData(200);
+          final qrBytes = picData!.buffer.asUint8List();
+
+          final qrCodeImageUrl = await Api().storage.uploadBytes(
+            qrBytes,
+            'qrcodes/${event.id}_qr.png',
+          );
+
+          await Api().events.updateEvent(event.copyWith(qrCodeImageUrl: qrCodeImageUrl));
+        }
 
         _pageController.animateToPage(
           CreateEventSteps.smsStatus.index,
