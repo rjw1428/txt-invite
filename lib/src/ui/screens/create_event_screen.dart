@@ -89,6 +89,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           return;
         }
       }
+
+      if (mounted) {
+        FocusScope.of(context).unfocus();
+      }
+
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeIn,
