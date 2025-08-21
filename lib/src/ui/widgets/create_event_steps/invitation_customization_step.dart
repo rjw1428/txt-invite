@@ -206,7 +206,7 @@ class _InvitationCustomizationStepState
                   onTap: () async {
                     final selectedColor = await showDialog<Color>(
                       context: context,
-                      builder: (context) => const ColorSelectionDialog(),
+                      builder: (context) => ColorSelectionDialog(selectedColor: _textColor),
                     );
                     if (selectedColor != null) {
                       setState(() {

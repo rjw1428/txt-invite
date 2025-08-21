@@ -73,6 +73,18 @@ class EventDetailsStepState extends State<EventDetailsStep> {
     return formValid && dateTimeValid;
   }
 
+  void clearStartTimeError() {
+    setState(() {
+      _startTimeError = null;
+    });
+  }
+
+    void clearEndTimeError() {
+    setState(() {
+      _endTimeError = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -127,6 +139,7 @@ class EventDetailsStepState extends State<EventDetailsStep> {
                     ));
                   }
                 }
+                clearStartTimeError();
               },
             ),
             if (_startTimeError != null)
@@ -156,6 +169,7 @@ class EventDetailsStepState extends State<EventDetailsStep> {
                     ));
                   }
                 }
+                clearEndTimeError();
               },
             ),
             if (_endTimeError != null)
