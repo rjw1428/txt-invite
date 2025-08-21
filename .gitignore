@@ -27,3 +27,4 @@ dist-ssr
 build
 .flutter-plugins-dependencies
 .flutter-plugins
+.firebase
