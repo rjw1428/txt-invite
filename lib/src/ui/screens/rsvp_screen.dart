@@ -101,107 +101,109 @@ class _RsvpScreenState extends State<RsvpScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Image.network(
-                  event.invitationImageUrl,
-                  width: 400,
-                  height: 300,
-                  fit: BoxFit.cover,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Image.network(
+                    event.invitationImageUrl,
+                    width: 400,
+                    height: 300,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
-              Text(
-                'Event: ${event.title}',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'Description: ${event.description}',
-              ),
-              Text(
-                'Date: ${dateTimeFormat.format(event.startTime)} - ${dateTimeFormat.format(event.endTime)}',
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Guest: ${guest.firstName} ${guest.lastName}',
-                style: const TextStyle(fontSize: 18),
-              ),
-              const SizedBox(height: 16),
-              if (hasResponded)
                 Text(
-                  'You have already RSVP\'d: ${RsvpStatus.values.firstWhere((status) => status == event.rsvps.firstWhere((rsvp) => rsvp.id == guest.id).status).toString().split('.').last}.',
+                  'Event: ${event.title}',
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<RsvpStatus>(
-                value: _selectedStatus == RsvpStatus.pending ? null : _selectedStatus,
-                decoration: const InputDecoration(
-                  labelText: 'Your RSVP',
-                  border: OutlineInputBorder(),
+                Text(
+                  'Description: ${event.description}',
                 ),
-                items:
-                    RsvpStatus.values
-                        .where((status) => status != RsvpStatus.pending)
-                        .map((status) {
-                          return DropdownMenuItem(
-                            value: status,
-                            child: Text(
-                              status.toString().split('.').last,
-                            ),
-                          );
-                        })
-                        .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedStatus = value;
-                  });
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return 'Please select an RSVP status';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    try {
-                      await Api().events.updateRsvp(
-                        eventId: widget.eventId,
-                        guestId: widget.guestId,
-                        status: _selectedStatus!,
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('RSVP submitted successfully!'),
-                        ),
-                      );
-                      GoRouter.of(
-                        context,
-                      ).go('/events/${widget.eventId}?guestId=${widget.guestId}');
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Failed to submit RSVP: $e'),
-                        ),
-                      );
+                Text(
+                  'Date: ${dateTimeFormat.format(event.startTime)} - ${dateTimeFormat.format(event.endTime)}',
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Guest: ${guest.firstName} ${guest.lastName}',
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(height: 16),
+                if (hasResponded)
+                  Text(
+                    'You have already RSVP\'d: ${RsvpStatus.values.firstWhere((status) => status == event.rsvps.firstWhere((rsvp) => rsvp.id == guest.id).status).toString().split('.').last}.',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<RsvpStatus>(
+                  value: _selectedStatus == RsvpStatus.pending ? null : _selectedStatus,
+                  decoration: const InputDecoration(
+                    labelText: 'Your RSVP',
+                    border: OutlineInputBorder(),
+                  ),
+                  items:
+                      RsvpStatus.values
+                          .where((status) => status != RsvpStatus.pending)
+                          .map((status) {
+                            return DropdownMenuItem(
+                              value: status,
+                              child: Text(
+                                status.toString().split('.').last,
+                              ),
+                            );
+                          })
+                          .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedStatus = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select an RSVP status';
                     }
-                  }
-                },
-                child: Text(
-                  hasResponded ? 'Update RSVP' : 'Submit RSVP',
+                    return null;
+                  },
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      try {
+                        await Api().events.updateRsvp(
+                          eventId: widget.eventId,
+                          guestId: widget.guestId,
+                          status: _selectedStatus!,
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('RSVP submitted successfully!'),
+                          ),
+                        );
+                        GoRouter.of(
+                          context,
+                        ).go('/events/${widget.eventId}?guestId=${widget.guestId}');
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to submit RSVP: $e'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: Text(
+                    hasResponded ? 'Update RSVP' : 'Submit RSVP',
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

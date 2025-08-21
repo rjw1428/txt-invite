@@ -53,89 +53,91 @@ class _TemplateSelectionStepState extends State<TemplateSelectionStep> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            FormField<String>(
-              validator: (value) {
-                if (_selectedTemplate == null) {
-                  return 'Please select a template';
-                }
-                return null;
-              },
-              builder: (FormFieldState<String> state) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 300, // Give the GridView a fixed height
-                      child: GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
-                        itemCount: _templates.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == 0) {
+            Expanded(
+              child: FormField<String>(
+                validator: (value) {
+                  if (_selectedTemplate == null) {
+                    return 'Please select a template';
+                  }
+                  return null;
+                },
+                builder: (FormFieldState<String> state) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
+                          itemCount: _templates.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == 0) {
+                              return GestureDetector(
+                                onTap: _pickImage,
+                                child: Card(
+                                  color: _selectedImage != null
+                                      ? Colors.blue.shade100
+                                      : Colors.white,
+                                  elevation: _selectedImage != null ? 4 : 1,
+                                  child: _selectedImage != null
+                                      ? Image.file(File(_selectedImage!))
+                                      : const Center(
+                                          child: Text('Upload from Gallery'),
+                                        ),
+                                ),
+                              );
+                            }
+                            final templateName = _templates[index - 1];
+                            final isSelected =
+                                _selectedTemplate == templateName;
                             return GestureDetector(
-                              onTap: _pickImage,
+                              onTap: () {
+                                setState(() {
+                                  _selectedTemplate = templateName;
+                                  _selectedImage = null;
+                                  state.didChange(templateName);
+                                });
+                                widget.onTemplateSelected(templateName);
+                              },
                               child: Card(
-                                color: _selectedImage != null
+                                color: isSelected
                                     ? Colors.blue.shade100
                                     : Colors.white,
-                                elevation: _selectedImage != null ? 4 : 1,
-                                child: _selectedImage != null
-                                    ? Image.file(File(_selectedImage!))
-                                    : const Center(
-                                        child: Text('Upload from Gallery'),
-                                      ),
-                              ),
-                            );
-                          }
-                          final templateName = _templates[index - 1];
-                          final isSelected = _selectedTemplate == templateName;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedTemplate = templateName;
-                                _selectedImage = null;
-                                state.didChange(templateName);
-                              });
-                              widget.onTemplateSelected(templateName);
-                            },
-                            child: Card(
-                              color: isSelected
-                                  ? Colors.blue.shade100
-                                  : Colors.white,
-                              elevation: isSelected ? 4 : 1,
-                              child: Center(
-                                child: Text(
-                                  templateName,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: isSelected
-                                        ? Colors.blue
-                                        : Colors.black,
+                                elevation: isSelected ? 4 : 1,
+                                child: Center(
+                                  child: Text(
+                                    templateName,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: isSelected
+                                          ? Colors.blue
+                                          : Colors.black,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    if (state.hasError)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          state.errorText!,
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.error),
+                            );
+                          },
                         ),
                       ),
-                  ],
-                );
-              },
+                      if (state.hasError)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            state.errorText!,
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.error),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
             ),
           ],
         ),

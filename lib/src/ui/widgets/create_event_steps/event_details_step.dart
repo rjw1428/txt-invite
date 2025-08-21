@@ -40,11 +40,13 @@ class EventDetailsStepState extends State<EventDetailsStep> {
     return picked;
   }
 
-  Future<TimeOfDay?> _selectTime(BuildContext context, bool isStartTime) async {
+  Future<TimeOfDay?> _selectTime(BuildContext context, DateTime? startTime) async {
     final now = TimeOfDay.now();
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay(hour: now.hour + (isStartTime ? 1 : 2), minute: 0),
+      initialTime: startTime != null
+          ? TimeOfDay(hour: startTime.hour + 1, minute: 0)
+          : TimeOfDay(hour: now.hour + 1, minute: 0),
     );
     return picked;
   }
@@ -128,7 +130,7 @@ class EventDetailsStepState extends State<EventDetailsStep> {
               onTap: () async {
                 final date = await _selectDate(context, null);
                 if (date != null) {
-                  final time = await _selectTime(context, true);
+                  final time = await _selectTime(context, null);
                   if (time != null) {
                     widget.onStartTimeChanged(DateTime(
                       date.year,
@@ -158,7 +160,7 @@ class EventDetailsStepState extends State<EventDetailsStep> {
               onTap: () async {
                 final date = await _selectDate(context, widget.startTime);
                 if (date != null) {
-                  final time = await _selectTime(context, false);
+                  final time = await _selectTime(context, widget.startTime);
                   if (time != null) {
                     widget.onEndTimeChanged(DateTime(
                       date.year,

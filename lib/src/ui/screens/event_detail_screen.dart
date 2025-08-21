@@ -55,16 +55,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   Future<void> _addComment() async {
     if (_commentController.text.isNotEmpty) {
-      String author = 'Anonymous';
+      String author = FirebaseAuth.instance.currentUser?.displayName ?? 'Event Host';
       if (widget.guestId != null) {
         final guestList = await _guestListFuture;
         if (guestList.isNotEmpty) {
           final guest = guestList.firstWhere((g) => g.id == widget.guestId);
           author = '${guest.firstName} ${guest.lastName}';
         }
-      } else {
-        author = FirebaseAuth.instance.currentUser?.displayName ?? 'Anonymous';
-      }
+      } 
       final comment = Comment(
         id: '', // Firestore will generate the ID
         text: _commentController.text,
