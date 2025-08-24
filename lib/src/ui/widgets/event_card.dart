@@ -110,18 +110,19 @@ class _EventCardState extends State<EventCard> {
                     if (guestList.isNotEmpty) {
                       final guestsToSend =
                           guestList.where((guest) {
-                            if (skipDeclinedGuests) {
-                              final rsvp = event.rsvps.firstWhere(
-                                (r) => r.id == guest.id,
-                                orElse:
-                                    () => Rsvp(
-                                      id: guest.id!,
-                                      status: RsvpStatus.pending,
-                                    ),
-                              );
-                              return rsvp.status != RsvpStatus.notAttending;
+                            if (!skipDeclinedGuests) {
+                              return true;
                             }
-                            return true;
+                            final rsvp = event.rsvps.firstWhere(
+                              (r) => r.id == guest.id,
+                              orElse:
+                                  () => Rsvp(
+                                    id: guest.id!,
+                                    status: RsvpStatus.pending,
+                                  ),
+                            );
+                            print('Guest ${guest.firstName} ${guest.lastName} has RSVP status: ${rsvp.status}');
+                            return rsvp.status != RsvpStatus.notAttending;
                           }).toList();
 
                       for (final guest in guestsToSend) {

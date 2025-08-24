@@ -21,6 +21,7 @@ class CancelEventDialogState extends State<CancelEventDialog> {
       content: Form(
         key: _formKey,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
               decoration: const InputDecoration(
