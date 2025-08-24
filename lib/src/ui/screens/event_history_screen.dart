@@ -1,4 +1,4 @@
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/models/event.dart';
@@ -13,21 +13,73 @@ class EventHistoryScreen extends StatefulWidget {
 }
 
 class _EventHistoryScreenState extends State<EventHistoryScreen> {
-  late Future<List<Event>> _eventsFuture;
+  final List<Event> _events = [];
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoading = false;
+  bool _isAllLoaded = false;
+  DocumentSnapshot? _lastDocument;
 
   @override
   void initState() {
     super.initState();
     _fetchPastEvents();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+              _scrollController.position.maxScrollExtent &&
+          !_isLoading) {
+        _fetchPastEvents();
+      }
+    });
   }
 
-  void _fetchPastEvents() {
-    final currentUser = Api().auth.currentUser;
-    if (currentUser != null) {
-      _eventsFuture = Api().events.getEventHistory(currentUser.id, DateTime.now());
-    } else {
-      _eventsFuture = Future.value([]); // Return an empty list if no user
+  Future<void> _fetchPastEvents() async {
+    if (_isLoading || _isAllLoaded) return;
+    print('Fetching past events...');
+    setState(() {
+      _isLoading = true;
+    });
+
+    final user = Api().auth.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
     }
+    final currentUserId = user.id;
+    final now = DateTime.now();
+    final result = await Api().events.getEventHistory(
+      currentUserId,
+      now,
+      _lastDocument,
+    );
+
+    if (result.results.isEmpty) {
+      setState(() {
+        _isAllLoaded = true;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    print("Result: ${result.results.length} events fetched");
+    setState(() {
+      _events.addAll(result.results);
+      _lastDocument = result.lastDocument;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _refreshEvents() async {
+    setState(() {
+      _events.clear();
+      _lastDocument = null;
+      _isAllLoaded = false;
+    });
+    await _fetchPastEvents();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -42,27 +94,19 @@ class _EventHistoryScreenState extends State<EventHistoryScreen> {
         ),
         title: const Text('Event History'),
       ),
-      body: FutureBuilder<List<Event>>(
-        future: _eventsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: SelectableText('Error: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No past events found.'));
-          }
-
-          return ListView.builder(
-            itemCount: snapshot.data!.length,
-            itemBuilder: (context, index) {
-              final event = snapshot.data![index];
-              return EventCard(event: event, showActionMenu: false, onUpdate: () => {},);
-            },
-          );
-        },
+      body: RefreshIndicator(
+        onRefresh: _refreshEvents,
+        child: ListView.builder(
+          itemCount: _events.length,
+          itemBuilder: (context, index) {
+            final event = _events[index];
+            return EventCard(
+              event: event,
+              showActionMenu: false,
+              onUpdate: () => {},
+            );
+          },
+        ),
       ),
     );
   }

@@ -15,6 +15,7 @@ import 'package:txt_invite/src/ui/widgets/create_event_steps/guest_list_manageme
 import 'package:txt_invite/src/ui/widgets/create_event_steps/invitation_customization_step.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/sms_status_step.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/template_selection_step.dart';
+import 'package:txt_invite/src/utils/constants.dart';
 
 enum CreateEventSteps {
   eventDetails,
@@ -164,7 +165,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         );
 
         if (_eventSettings.qrCodeEnabled) {
-          final anonymousGuest = Guest(firstName: 'anonymous', lastName: '', phoneNumber: '');
+          final anonymousGuest = Guest(firstName: ANONYMOUS_GUEST_NAME, lastName: '', phoneNumber: '');
           final addedGuest = await Api().events.addGuest(event.id, anonymousGuest);
 
           final qrPainter = QrPainter(

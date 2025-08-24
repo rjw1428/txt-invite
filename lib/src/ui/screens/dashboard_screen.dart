@@ -1,4 +1,5 @@
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/services/api.dart';
@@ -14,30 +15,68 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  late Future<List<Event>> _eventsFuture;
-  late String _currentUserId;
+  final List<Event> _events = [];
+  DocumentSnapshot? _lastDocument;
+  bool _isLoading = false;
+  bool _isAllLoaded = false;
+  final ScrollController _scrollController = ScrollController();
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    _eventsFuture = _fetchEvents();
-  }
-
-  Future<void> _refreshEvents() async {
-    final events = await _fetchEvents();
-    setState(() {
-      _eventsFuture = Future.value(events);
+    _fetchEvents();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+              _scrollController.position.maxScrollExtent &&
+          !_isLoading) {
+        _fetchEvents();
+      }
     });
   }
 
-  Future<List<Event>> _fetchEvents() async {
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchEvents() async {
+    if (_isLoading || _isAllLoaded) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
     final user = Api().auth.currentUser;
     if (user == null) {
       throw Exception('User not logged in');
     }
-    _currentUserId = user.id;
+    final currentUserId = user.id;
     final now = DateTime.now();
-    return Api().events.getActiveEvents(_currentUserId, now);
+    final result = await Api().events.getActiveEvents(currentUserId, now, _lastDocument);
+
+    if (result.results.isEmpty) {
+      setState(() {
+        _isAllLoaded = true;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _events.addAll(result.results);
+      _lastDocument = result.lastDocument;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _refreshEvents() async {
+    setState(() {
+      _events.clear();
+      _lastDocument = null;
+      _isAllLoaded = false;
+    });
+    await _fetchEvents();
   }
 
   @override
@@ -46,34 +85,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Upcoming Events'),
       ),
-            body: RefreshIndicator(
+      body: RefreshIndicator(
         onRefresh: _refreshEvents,
-        child: FutureBuilder<List<Event>>(
-          future: _eventsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: SelectableText('Error: ${snapshot.error}'));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('No upcoming events.'));
-            } else {
-              return ListView.builder(
-                itemCount: snapshot.data!.length,
+        child: _events.isEmpty
+            ? const Center(child: Text('No events found'))
+            : ListView.builder(
+                controller: _scrollController,
+                itemCount: _events.length + (_isLoading ? 1 : 0),
                 itemBuilder: (context, index) {
-                  final event = snapshot.data![index];
-                  return EventCard(event: event, onUpdate: _refreshEvents);
-                },
-              );
+                  if (index == _events.length) {
+                    return const Center(child: CircularProgressIndicator());
             }
+            final event = _events[index];
+            return EventCard(event: event, onUpdate: _refreshEvents);
           },
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => CreateEventScreen())
-          );
+          await Navigator.of(context)
+              .push(MaterialPageRoute(builder: (context) => CreateEventScreen()));
           _refreshEvents();
         },
         child: const Icon(Icons.add),

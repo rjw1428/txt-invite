@@ -113,14 +113,14 @@ class _RsvpScreenState extends State<RsvpScreen> {
                     fit: BoxFit.cover,
                   ),
                 ),
-                Text(
+                SelectableText(
                   'Event: ${event.title}',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
+                SelectableText(
                   'Description: ${event.description}',
                 ),
                 Text(

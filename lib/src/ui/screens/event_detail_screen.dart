@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +6,8 @@ import 'package:txt_invite/src/models/comment.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
+import 'package:txt_invite/src/utils/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/utils/constants.dart';
@@ -55,7 +57,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   Future<void> _addComment() async {
     if (_commentController.text.isNotEmpty) {
-      String author = FirebaseAuth.instance.currentUser?.displayName ?? 'Event Host';
+      String author = Api().auth.currentUser?.displayName ?? 'Event Host';
       if (widget.guestId != null) {
         final guestList = await _guestListFuture;
         if (guestList.isNotEmpty) {
@@ -160,7 +162,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          SelectableText(
                             event.title,
                             style: const TextStyle(
                               fontSize: 24,
@@ -168,7 +170,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
+                          SelectableText(
                             event.description,
                             style: const TextStyle(fontSize: 16),
                           ),
@@ -191,10 +193,30 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Image.network(
-                              event.qrCodeImageUrl!,
-                              width: 200,
-                              height: 200,
+                            Row(
+                              children: [
+                                Image.network(
+                                  event.qrCodeImageUrl!,
+                                  width: 200,
+                                  height: 200,
+                                ),
+                                if (Api().auth.currentUser != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        final uri =
+                                            Uri.parse(event.qrCodeImageUrl!);
+                                        if (await canLaunchUrl(uri)) {
+                                          await launchUrl(uri);
+                                        } else {
+                                          throw 'Could not launch $uri';
+                                        }
+                                      },
+                                      child: const Text('Download'),
+                                    ),
+                                  ),
+                              ],
                             ),
                             const SizedBox(height: 16),
                           ],

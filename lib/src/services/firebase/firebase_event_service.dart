@@ -3,7 +3,9 @@ import 'package:txt_invite/src/interfaces/event_service.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/event_status.dart';
 import 'package:txt_invite/src/models/guest.dart';
+import 'package:txt_invite/src/models/paginated_result.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
+import 'package:txt_invite/src/utils/constants.dart';
 
 class FirebaseEventService implements EventService {
   final FirebaseFirestore _firestore;
@@ -34,38 +36,55 @@ class FirebaseEventService implements EventService {
   }
 
   @override
-  Future<List<Event>> getActiveEvents(String uid, DateTime filterTime) async {
-    final snapshot =
-        await _firestore
-            .collection('events')
-            .where('createdBy', isEqualTo: uid)
-            .where('endTime', isGreaterThanOrEqualTo: filterTime)
-            .where('status', isEqualTo: EventStatus.active.toString())
-            .orderBy('startTime')
-            .limit(10)
-            .get();
+  Future<PaginatedResult<Event>> getActiveEvents(String uid, DateTime filterTime, DocumentSnapshot? lastDocument) async {
+    var query = _firestore
+        .collection('events')
+        .where('createdBy', isEqualTo: uid)
+        .where('endTime', isGreaterThanOrEqualTo: filterTime)
+        .where('status', isEqualTo: EventStatus.active.toString())
+        .orderBy('startTime')
+        .limit(10);
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    final snapshot = await query.get();
 
     if (snapshot.docs.isEmpty) {
-      return [];
+      return PaginatedResult(results: []);
     }
-    
-    return snapshot.docs.map((doc) {
+
+    final events = snapshot.docs.map((doc) {
       return Event.fromMap({'id': doc.id, ...doc.data()});
     }).toList();
+
+    return PaginatedResult(results: events, lastDocument: snapshot.docs.last);
   }
 
   @override
-  Future<List<Event>> getEventHistory(String uid, DateTime filterTime) async {
-    final snapshot =
-        await _firestore
-            .collection('events')
-            .where('createdBy', isEqualTo: uid)
-            .orderBy('startTime', descending: true)
-            .limit(10)
-            .get();
-    return snapshot.docs.map((doc) {
+  Future<PaginatedResult<Event>> getEventHistory(String uid, DateTime filterTime, DocumentSnapshot? lastDocument) async {
+    var query = _firestore
+        .collection('events')
+        .where('createdBy', isEqualTo: uid)
+        .orderBy('startTime', descending: true)
+        .limit(3);
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    final snapshot = await query.get();
+
+    if (snapshot.docs.isEmpty) {
+      return PaginatedResult(results: [], lastDocument: null);
+    }
+
+    final docs = snapshot.docs.map((doc) {
       return Event.fromMap({'id': doc.id, ...doc.data()});
     }).where((event) => event.startTime.isBefore(filterTime) || event.status == EventStatus.cancelled).toList();
+
+    return PaginatedResult(results: docs, lastDocument: snapshot.docs.last);
   }
 
   @override
@@ -162,7 +181,10 @@ class FirebaseEventService implements EventService {
       return [];
     }
 
-    return snapshot.docs.map((doc) => Guest.fromMap(doc.data())).toList();
+    return snapshot.docs
+        .map((doc) => Guest.fromMap(doc.data()))
+        .where((guest) => guest.firstName != ANONYMOUS_GUEST_NAME)
+        .toList();
   }
 
   @override
