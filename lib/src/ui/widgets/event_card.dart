@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/event_status.dart';
 import 'package:txt_invite/src/models/guest.dart';
@@ -8,13 +9,19 @@ import 'package:txt_invite/src/ui/screens/add_edit_guest_screen.dart';
 import 'package:txt_invite/src/ui/widgets/cancel_event_dialog.dart';
 import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/utils/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EventCard extends StatefulWidget {
   final Event event;
   final bool showActionMenu;
   final VoidCallback onUpdate;
 
-  const EventCard({super.key, required this.event, this.showActionMenu = true, required this.onUpdate});
+  const EventCard({
+    super.key,
+    required this.event,
+    this.showActionMenu = true,
+    required this.onUpdate,
+  });
 
   @override
   State<EventCard> createState() => _EventCardState();
@@ -97,13 +104,27 @@ class _EventCardState extends State<EventCard> {
             context: context,
             builder:
                 (context) => CancelEventDialog(
-                  onConfirm: (reason) async {
+                  onConfirm: (reason, skipDeclinedGuests) async {
                     await Api().events.cancelEvent(event.id);
-                    final guestList = await Api().events.getGuests(
-                      event.id,
-                    );
+                    final guestList = await Api().events.getGuests(event.id);
                     if (guestList.isNotEmpty) {
-                      for (final guest in guestList) {
+                      final guestsToSend =
+                          guestList.where((guest) {
+                            if (skipDeclinedGuests) {
+                              final rsvp = event.rsvps.firstWhere(
+                                (r) => r.id == guest.id,
+                                orElse:
+                                    () => Rsvp(
+                                      id: guest.id!,
+                                      status: RsvpStatus.pending,
+                                    ),
+                              );
+                              return rsvp.status != RsvpStatus.notAttending;
+                            }
+                            return true;
+                          }).toList();
+
+                      for (final guest in guestsToSend) {
                         await Api().messaging.sendCancellationMessage(
                           guest,
                           event,
@@ -111,7 +132,7 @@ class _EventCardState extends State<EventCard> {
                         );
                       }
                     }
-                     widget.onUpdate();
+                    widget.onUpdate();
                   },
                 ),
           );
@@ -174,7 +195,18 @@ class _EventCardState extends State<EventCard> {
                   fit: BoxFit.cover,
                 ),
               const SizedBox(height: 8),
-              Text(event.description),
+              SelectableLinkify(
+                onOpen: (link) async {
+                  if (await canLaunchUrl(Uri.parse(link.url))) {
+                    await launchUrl(Uri.parse(link.url));
+                  } else {
+                    print('Could not launch ${link.url}');
+                  }
+                },
+                text: event.description,
+                style: const TextStyle(fontSize: 16),
+                linkStyle: const TextStyle(color: Colors.blue),
+              ),
               const SizedBox(height: 8),
               Text(
                 'Starts: ${dateTimeFormat.format(event.startTime.toLocal())}',

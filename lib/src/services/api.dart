@@ -4,6 +4,7 @@ import '../interfaces/comment_service.dart';
 import '../interfaces/event_service.dart';
 import '../interfaces/guest_list_service.dart';
 import '../interfaces/messaging_service.dart';
+import '../interfaces/notification_service.dart';
 import '../interfaces/storage_service.dart';
 
 class Api {
@@ -19,7 +20,8 @@ class Api {
       required this.guestLists,
       required this.storage,
       required this.messaging,
-      required this.comments});
+      required this.comments,
+      required this.notifications});
 
   static void initialize(
       AuthService auth,
@@ -27,14 +29,16 @@ class Api {
       GuestListService guestLists,
       StorageService storage,
       MessagingService messaging,
-      CommentService comments) {
+      CommentService comments,
+      NotificationService notifications) {
     _instance = Api._(
         auth: auth,
         events: events,
         guestLists: guestLists,
         storage: storage,
         messaging: messaging,
-        comments: comments);
+        comments: comments,
+        notifications: notifications);
   }
 
   final AuthService auth;
@@ -43,4 +47,5 @@ class Api {
   final StorageService storage;
   final MessagingService messaging;
   final CommentService comments;
+  final NotificationService notifications;
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,6 +9,7 @@ import 'package:txt_invite/src/services/firebase/firebase_event_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_guest_list_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_storage_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_comment_service.dart';
+import 'package:txt_invite/src/services/firebase/firebase_notification_service.dart';
 import 'package:txt_invite/src/services/telephony_service.dart';
 import 'package:txt_invite/src/ui/screens/event_history_screen.dart';
 import 'package:txt_invite/src/ui/screens/guest_list_screen.dart';
@@ -19,6 +21,21 @@ import 'package:txt_invite/src/ui/screens/home_screen.dart';
 import 'package:txt_invite/src/ui/screens/login_screen.dart';
 import 'package:txt_invite/src/ui/screens/event_detail_screen.dart';
 import 'package:go_router/go_router.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  Api.initialize(
+    FirebaseAuthService(),
+    FirebaseEventService(),
+    FirebaseGuestListService(),
+    FirebaseStorageService(),
+    TelephonyService(),
+    FirebaseCommentService(),
+    FirebaseNotificationService(),
+  );
+  await Api().notifications.handleBackgroundMessage(message);
+}
 
 final _router = GoRouter(
   routes: [
@@ -109,7 +126,12 @@ void main() async {
     FirebaseStorageService(),
     TelephonyService(),
     FirebaseCommentService(),
+    FirebaseNotificationService(),
   );
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  await Api().notifications.init();
 
   setPathUrlStrategy();
   runApp(const MyApp());

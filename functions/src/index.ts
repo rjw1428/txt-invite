@@ -1,4 +1,5 @@
 import {onRequest} from "firebase-functions/v2/https";
+import {onDocumentUpdated} from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import {readFileSync} from "fs";
@@ -79,3 +80,76 @@ export const ogPreview = onRequest(async (request, response) => {
     response.status(500).send("Internal Server Error");
   }
 });
+
+export const sendRsvpNotification = onDocumentUpdated(
+  "events/{eventId}",
+  async (event) => {
+    logger.info("Event updated!");
+
+    if (!event.data) {
+      logger.info("No data associated with the event");
+      return;
+    }
+
+    const beforeRsvps = event.data.before.data().rsvps || [];
+    const afterRsvps = event.data.after.data().rsvps || [];
+
+    if (beforeRsvps.length >= afterRsvps.length) {
+      logger.info("No new RSVPs added");
+      // Could still be an update
+      return;
+    }
+
+    const eventData = event.data.after.data();
+    const newRsvp = afterRsvps[afterRsvps.length - 1];
+
+    // Get guest data
+    const guestDoc = await admin
+      .firestore()
+      .collection(`events/${event.params.eventId}/guestList`)
+      .doc(newRsvp.id)
+      .get();
+
+    if (!guestDoc.exists) {
+      logger.error("Guest not found");
+      return;
+    }
+    const guestData = guestDoc.data();
+    if (!guestData) {
+      logger.error("Guest data is empty");
+      return;
+    }
+
+    // Get host's FCM token
+    const hostId = eventData.createdBy;
+    const userDoc = await admin.firestore()
+      .collection("users")
+      .doc(hostId)
+      .get();
+
+    if (!userDoc.exists) {
+      logger.error("Host not found");
+      return;
+    }
+
+    const userData = userDoc.data();
+    if (!userData || !userData.fcmToken) {
+      logger.error("Host has no FCM token");
+      return;
+    }
+
+    // Send the notification
+    try {
+      await admin.messaging().send({
+        token: userData.fcmToken,
+        notification: {
+          title: `New RSVP for ${eventData.title}`,
+          body: `${guestData.firstName} ${guestData.lastName} has RSVPed!`,
+        },
+      });
+      logger.info("Notification sent successfully");
+    } catch (error) {
+      logger.error("Error sending notification:", error);
+    }
+  }
+);

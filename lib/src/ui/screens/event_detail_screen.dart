@@ -1,5 +1,5 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/models/comment.dart';
@@ -8,9 +8,9 @@ import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 import 'package:txt_invite/src/utils/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:add_2_calendar/add_2_calendar.dart' as add2calendar;
 import 'package:txt_invite/src/services/api.dart';
-import 'package:txt_invite/src/utils/constants.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final String eventId;
@@ -57,14 +57,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   Future<void> _addComment() async {
     if (_commentController.text.isNotEmpty) {
-      String author = Api().auth.currentUser?.displayName ?? 'Event Host';
+      String author = 'Event Host'; //Api().auth.currentUser?.displayName ??
       if (widget.guestId != null) {
         final guestList = await _guestListFuture;
         if (guestList.isNotEmpty) {
           final guest = guestList.firstWhere((g) => g.id == widget.guestId);
           author = '${guest.firstName} ${guest.lastName}';
         }
-      } 
+      }
       final comment = Comment(
         id: '', // Firestore will generate the ID
         text: _commentController.text,
@@ -170,19 +170,44 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          SelectableText(
-                            event.description,
+                          SelectableLinkify(
+                            onOpen: (link) async {
+                              if (await canLaunchUrl(Uri.parse(link.url))) {
+                                await launchUrl(Uri.parse(link.url));
+                              } else {
+                                 print('Could not launch ${link.url}');
+                              }
+                            },
+                            text: event.description,
                             style: const TextStyle(fontSize: 16),
+                            linkStyle: const TextStyle(color: Colors.blue),
                           ),
                           const SizedBox(height: 16),
-                          Text(
+                          SelectableText(
                             'Starts: ${dateTimeFormat.format(event.startTime.toLocal())}',
                             style: const TextStyle(fontSize: 14),
                           ),
-                          Text(
+                          SelectableText(
                             'Ends: ${dateTimeFormat.format(event.endTime.toLocal())}',
                             style: const TextStyle(fontSize: 14),
                           ),
+                          const SizedBox(height: 16),
+                          if (!kIsWeb)
+                            ElevatedButton(
+                              onPressed: () {
+                                final calEvent = add2calendar.Event(
+                                  title: event.title,
+                                  description: event.description,
+                                  location: '',
+                                  startDate: event.startTime,
+                                  endDate: event.endTime,
+                                );
+                                add2calendar.Add2Calendar.addEvent2Cal(
+                                  calEvent,
+                                );
+                              },
+                              child: const Text('Add to Calendar'),
+                            ),
                           const SizedBox(height: 16),
                           if (event.qrCodeImageUrl != null) ...[
                             const Text(
@@ -193,31 +218,28 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Image.network(
-                                  event.qrCodeImageUrl!,
-                                  width: 200,
-                                  height: 200,
-                                ),
-                                if (Api().auth.currentUser != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0),
-                                    child: ElevatedButton(
-                                      onPressed: () async {
-                                        final uri =
-                                            Uri.parse(event.qrCodeImageUrl!);
-                                        if (await canLaunchUrl(uri)) {
-                                          await launchUrl(uri);
-                                        } else {
-                                          throw 'Could not launch $uri';
-                                        }
-                                      },
-                                      child: const Text('Download'),
-                                    ),
-                                  ),
-                              ],
+                            Image.network(
+                              event.qrCodeImageUrl!,
+                              width: 200,
+                              height: 200,
                             ),
+                            if (Api().auth.currentUser != null)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    final uri = Uri.parse(
+                                      event.qrCodeImageUrl!,
+                                    );
+                                    if (await canLaunchUrl(uri)) {
+                                      await launchUrl(uri);
+                                    } else {
+                                      throw 'Could not launch $uri';
+                                    }
+                                  },
+                                  child: const Text('Download'),
+                                ),
+                              ),
                             const SizedBox(height: 16),
                           ],
                           if (event.settings.guestListVisible) ...[
@@ -250,67 +272,70 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   final guestList = guestListSnapshot.data!;
                                   return event.settings.rsvpRequired
                                       ? Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: guestList.map((guest) {
-                                            final rsvp = event.rsvps.firstWhere(
-                                            (r) => r.id == guest.id,
-                                            orElse:
-                                                () => Rsvp(
-                                                  id: guest.id!,
-                                                  status: RsvpStatus.pending,
-                                                ), // Default to pending if no RSVP found
-                                          );
-                                          if (guest.id == widget.guestId) {
-                                            return Row(
-                                              children: [
-                                                Text(
-                                                  '- ${guest.firstName} ${guest.lastName}',
-                                                ),
-                                                const SizedBox(width: 8),
-                                                DropdownButton<RsvpStatus>(
-                                                  value: rsvp.status,
-                                                  onChanged: (newStatus) {
-                                                    if (newStatus != null) {
-                                                      _showRsvpConfirmationDialog(
-                                                        newStatus,
-                                                      );
-                                                    }
-                                                  },
-                                                  items:
-                                                      RsvpStatus.values
-                                                          .map(
-                                                            (
-                                                              status,
-                                                            ) => DropdownMenuItem(
-                                                              value: status,
-                                                              child: Text(
-                                                                _getRsvpStatusString(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children:
+                                            guestList.map((guest) {
+                                              final rsvp = event.rsvps.firstWhere(
+                                                (r) => r.id == guest.id,
+                                                orElse:
+                                                    () => Rsvp(
+                                                      id: guest.id!,
+                                                      status:
+                                                          RsvpStatus.pending,
+                                                    ), // Default to pending if no RSVP found
+                                              );
+                                              if (guest.id == widget.guestId) {
+                                                return Row(
+                                                  children: [
+                                                    Text(
+                                                      '- ${guest.firstName} ${guest.lastName}',
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    DropdownButton<RsvpStatus>(
+                                                      value: rsvp.status,
+                                                      onChanged: (newStatus) {
+                                                        if (newStatus != null) {
+                                                          _showRsvpConfirmationDialog(
+                                                            newStatus,
+                                                          );
+                                                        }
+                                                      },
+                                                      items:
+                                                          RsvpStatus.values
+                                                              .map(
+                                                                (
                                                                   status,
+                                                                ) => DropdownMenuItem(
+                                                                  value: status,
+                                                                  child: Text(
+                                                                    _getRsvpStatusString(
+                                                                      status,
+                                                                    ),
+                                                                  ),
                                                                 ),
-                                                              ),
-                                                            ),
-                                                          )
-                                                          .toList(),
-                                                ),
-                                              ],
-                                            );
-                                          } else {
-                                            return Text(
-                                              '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.status)})',
-                                            );
-                                          }
-                                        }).toList(),
-                                  )
-                                : Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: guestList.map((guest) {
-                                        return Text(
-                                          '- ${guest.firstName} ${guest.lastName}',
-                                        );
-                                      }).toList(),
-                                    );
+                                                              )
+                                                              .toList(),
+                                                    ),
+                                                  ],
+                                                );
+                                              } else {
+                                                return Text(
+                                                  '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.status)})',
+                                                );
+                                              }
+                                            }).toList(),
+                                      )
+                                      : Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children:
+                                            guestList.map((guest) {
+                                              return Text(
+                                                '- ${guest.firstName} ${guest.lastName}',
+                                              );
+                                            }).toList(),
+                                      );
                                 }
                               },
                             ),
@@ -353,17 +378,38 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                       return Container(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Row(
-                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
                                               children: [
-                                                Text("${comment.author} - ", style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
-                                                Text(dateTimeFormat.format(comment.createdAt
-                                                    .toDate()), style: const TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
+                                                Text(
+                                                  "${comment.author} - ",
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  dateTimeFormat.format(
+                                                    comment.createdAt.toDate(),
+                                                  ),
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
                                               ],
                                             ),
-                                            Text(comment.text, style: const TextStyle(fontSize: 14)),
+                                            Text(
+                                              comment.text,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       );
