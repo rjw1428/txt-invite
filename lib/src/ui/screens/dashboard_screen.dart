@@ -26,8 +26,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     _fetchEvents();
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-              _scrollController.position.maxScrollExtent &&
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 200 &&
           !_isLoading) {
         _fetchEvents();
       }

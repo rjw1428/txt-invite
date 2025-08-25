@@ -24,9 +24,11 @@ class _EventHistoryScreenState extends State<EventHistoryScreen> {
     super.initState();
     _fetchPastEvents();
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-              _scrollController.position.maxScrollExtent &&
-          !_isLoading) {
+      print(" ${_scrollController.position.pixels} - ${_scrollController.position.maxScrollExtent}");
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 200 &&
+          !_isLoading &&
+          !_isAllLoaded) {
         _fetchPastEvents();
       }
     });
@@ -97,6 +99,7 @@ class _EventHistoryScreenState extends State<EventHistoryScreen> {
       body: RefreshIndicator(
         onRefresh: _refreshEvents,
         child: ListView.builder(
+          controller: _scrollController,
           itemCount: _events.length,
           itemBuilder: (context, index) {
             final event = _events[index];

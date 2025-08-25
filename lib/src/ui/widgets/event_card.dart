@@ -163,7 +163,6 @@ class _EventCardState extends State<EventCard> {
 
   @override
   Widget build(BuildContext context) {
-    print('Building EventCard for event: ${event.rsvpCounts} guests');
     return InkWell(
       onTap: () {
         context.go('/events/${event.id}', extra: {'fromHome': true});
