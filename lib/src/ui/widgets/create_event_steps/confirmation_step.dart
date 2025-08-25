@@ -1,9 +1,13 @@
-
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:txt_invite/src/models/event_settings.dart';
 import 'package:txt_invite/src/models/guest.dart';
-import 'package:txt_invite/src/models/guest_list.dart'; // Import GuestList
+import 'package:txt_invite/src/models/guest_list.dart';
 import 'package:txt_invite/src/services/api.dart';
+import 'package:txt_invite/src/utils/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ConfirmationStep extends StatefulWidget {
   final GlobalKey<FormState> formKey;
@@ -14,6 +18,7 @@ class ConfirmationStep extends StatefulWidget {
   final String? selectedTemplate;
   final EventSettings settings;
   final List<Guest> guestList;
+  final Uint8List? invitationImage;
 
   const ConfirmationStep({
     super.key,
@@ -25,6 +30,7 @@ class ConfirmationStep extends StatefulWidget {
     required this.selectedTemplate,
     required this.settings,
     required this.guestList,
+    required this.invitationImage,
   });
 
   @override
@@ -32,7 +38,8 @@ class ConfirmationStep extends StatefulWidget {
 }
 
 class _ConfirmationStepState extends State<ConfirmationStep> {
-  final TextEditingController _guestListNameController = TextEditingController();
+  final TextEditingController _guestListNameController =
+      TextEditingController();
 
   @override
   void dispose() {
@@ -45,30 +52,72 @@ class _ConfirmationStepState extends State<ConfirmationStep> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Form(
-        key: widget.formKey, // Use widget.formKey
+        key: widget.formKey,
         child: ListView(
           children: [
             const Text(
               'Confirm Event Details',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+            if (widget.invitationImage != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: Image.memory(
+                  widget.invitationImage!,
+                  width: 400,
+                  height: 300,
+                  fit: BoxFit.cover,
+                ),
+              ),
             const SizedBox(height: 16),
-            Text('Title: ${widget.title}'), // Use widget.title
-            Text('Description: ${widget.description}'), // Use widget.description
-            Text('Start Time: ${widget.startTime?.toLocal().toString().split('.')[0] ?? 'N/A'}'), // Use widget.startTime
-            Text('End Time: ${widget.endTime?.toLocal().toString().split('.')[0] ?? 'N/A'}'), // Use widget.endTime
-            Text('Selected Template: ${widget.selectedTemplate ?? 'N/A'}'), // Use widget.selectedTemplate
-            Text('Allow Comments: ${widget.settings.allowComments ? 'Yes' : 'No'}'), // Use widget.settings
-            Text('Guest List Visible: ${widget.settings.guestListVisible ? 'Yes' : 'No'}'), // Use widget.settings
-            Text('RSVP Required: ${widget.settings.rsvpRequired ? 'Yes' : 'No'}'), // Use widget.settings
+            SelectableText(
+              widget.title,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            SelectableLinkify(
+              onOpen: (link) async {
+                if (await canLaunchUrl(Uri.parse(link.url))) {
+                  await launchUrl(Uri.parse(link.url));
+                } else {
+                  print('Could not launch ${link.url}');
+                }
+              },
+              text: widget.description,
+              style: const TextStyle(fontSize: 16),
+              linkStyle: const TextStyle(color: Colors.blue),
+            ),
+            const SizedBox(height: 16),
+            SelectableText(
+              'Starts: ${dateTimeFormat.format(widget.startTime!.toLocal())}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            SelectableText(
+              'Ends: ${dateTimeFormat.format(widget.endTime!.toLocal())}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            Text(
+              'Allow Comments: ${widget.settings.allowComments ? 'Yes' : 'No'}',
+            ),
+            Text(
+              'Guest List Visible: ${widget.settings.guestListVisible ? 'Yes' : 'No'}',
+            ),
+            Text(
+              'RSVP Required: ${widget.settings.rsvpRequired ? 'Yes' : 'No'}',
+            ),
+            Text(
+              'Generate QR Code: ${widget.settings.qrCodeEnabled ? 'Yes' : 'No'}',
+            ),
             const SizedBox(height: 16),
             const Text(
               'Guest List:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            ...widget.guestList.map((guest) => Text("${guest.firstName} ${guest.lastName}")), // Use widget.guestList
-            const SizedBox(height: 16), // Add some space before the button
+            ...widget.guestList.map(
+              (guest) => Text("${guest.firstName} ${guest.lastName}"),
+            ), 
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => _showSaveGuestListDialog(context),
               child: const Text('Save Guest List for Later'),
@@ -111,7 +160,9 @@ class _ConfirmationStepState extends State<ConfirmationStep> {
                     await Api().guestLists.createGuestList(newGuestList);
                     // Optionally show a success message
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Guest list saved successfully!')),
+                      const SnackBar(
+                        content: Text('Guest list saved successfully!'),
+                      ),
                     );
                     Navigator.of(context).pop();
                   } catch (e) {
@@ -123,7 +174,9 @@ class _ConfirmationStepState extends State<ConfirmationStep> {
                 } else {
                   // Show a message if the name is empty
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Guest list name cannot be empty.')),
+                    const SnackBar(
+                      content: Text('Guest list name cannot be empty.'),
+                    ),
                   );
                 }
               },

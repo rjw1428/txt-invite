@@ -42,6 +42,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     6,
     (_) => GlobalKey<FormState>(),
   );
+  final ScreenshotController _screenshotController = ScreenshotController();
   final GlobalKey<EventDetailsStepState> _eventDetailsStepKey = GlobalKey<EventDetailsStepState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
@@ -53,8 +54,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Event? _event;
   bool _isLoading = false;
   Uint8List? _invitationImage;
-
-  final ScreenshotController _screenshotController = ScreenshotController();
 
   @override
   void dispose() {
@@ -284,6 +283,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       selectedTemplate: _selectedTemplate,
                       guestList: _selectedGuestList,
                       settings: _eventSettings,
+                      invitationImage: _invitationImage
                     ),
                     SmsStatusScreen(
                       event: _event,
