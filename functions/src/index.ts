@@ -1,14 +1,17 @@
-import { onRequest } from "firebase-functions/v2/https";
-import { onDocumentCreated, onDocumentWritten } from "firebase-functions/v2/firestore";
+import {onRequest} from "firebase-functions/v2/https";
+import {
+  onDocumentCreated,
+  onDocumentWritten,
+} from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
-import { readFileSync } from "fs";
-import { join } from "path";
+import {readFileSync} from "fs";
+import {join} from "path";
 
 admin.initializeApp();
 
 export const ogPreview = onRequest(async (request, response) => {
-  logger.info("OG Preview function called!", { structuredData: true });
+  logger.info("OG Preview function called!", {structuredData: true});
 
   // eventId from /rsvp/:eventId or /events/:eventId
   const eventId = request.params[0].split("/")[1];
@@ -92,7 +95,7 @@ export const sendRsvpNotification = onDocumentWritten(
       return;
     }
 
-    const beforeRsvp = event.data.before.data()
+    const beforeRsvp = event.data.before.data();
     const rsvpData = event.data.after.data();
     if (!rsvpData) {
       logger.info(`RSVP Deleted for ${event.params.rsvpId}`);
@@ -147,7 +150,7 @@ export const sendRsvpNotification = onDocumentWritten(
       .update({
         attendingCount,
         notAttendingCount,
-        maybeCount
+        maybeCount,
       });
 
     // Get guest data
@@ -184,20 +187,21 @@ export const sendRsvpNotification = onDocumentWritten(
       logger.error("Host has no FCM token");
       return;
     }
-    const notification = beforeRsvp
-      ? {
-        title: `RSVP Updated for ${rsvpData.title}`,
-        body: `${guestData.firstName} ${guestData.lastName} has updated their RSVP to ${rsvpData.status}`,
-      }
-      : {
-        title: `New RSVP for ${rsvpData.title}`,
-        body: `${guestData.firstName} ${guestData.lastName} has responded: ${rsvpData.status}`,
-      };
+    const title = beforeRsvp ?
+      `RSVP Updated for ${rsvpData.title}` :
+      `New RSVP for ${rsvpData.title}`;
+
+    const user = `${guestData.firstName} ${guestData.lastName}`;
+    const body = beforeRsvp ?
+      `${user} has updated their RSVP to ${rsvpData.status}` :
+      `${user} has responded: ${rsvpData.status}`;
+
+    const notification = {title, body};
     // Send the notification
     try {
       await admin.messaging().send({
         token: userData.fcmToken,
-        notification
+        notification,
       });
       logger.info("Notification sent successfully");
     } catch (error) {
@@ -267,7 +271,7 @@ export const sendCommentNotification = onDocumentCreated(
     try {
       await admin.messaging().send({
         token: userData.fcmToken,
-        notification
+        notification,
       });
       logger.info("Notification sent successfully");
     } catch (error) {
