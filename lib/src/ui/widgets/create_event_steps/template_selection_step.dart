@@ -2,40 +2,51 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:txt_invite/src/models/invitation.dart';
+import 'package:txt_invite/src/services/api.dart';
 
 class TemplateSelectionStep extends StatefulWidget {
-  final Function(String) onTemplateSelected;
+  final Function(Invitation) onTemplateSelected;
   final GlobalKey<FormState> formKey;
 
-  const TemplateSelectionStep(
-      {super.key, required this.onTemplateSelected, required this.formKey});
+  const TemplateSelectionStep({
+    super.key,
+    required this.onTemplateSelected,
+    required this.formKey,
+  });
 
   @override
   State<TemplateSelectionStep> createState() => _TemplateSelectionStepState();
 }
 
 class _TemplateSelectionStepState extends State<TemplateSelectionStep> {
-  final List<String> _templates = [
-    'Template 1',
-    'Template 2',
-    'Template 3',
-    'Template 4',
-    'Template 5',
-  ];
+  late Future<List<Invitation>> _templatesFuture;
+  int? selectedIndex;
+  Invitation? _selectedTemplate;
 
-  String? _selectedTemplate;
-  String? _selectedImage;
+  @override
+  void initState() {
+    super.initState();
+    _templatesFuture = Api().templateService.getAllTemplates();
+  }
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
+      final newTemplate = Invitation(
+        width: 500,
+        height: 500,
+        textElements: [],
+        imageElements: [],
+        backgroundImage: image.path,
+      );
       setState(() {
-        _selectedImage = image.path;
-        _selectedTemplate = image.path;
+        selectedIndex = 0;
+        _selectedTemplate = newTemplate;
       });
-      widget.onTemplateSelected(image.path);
+      widget.onTemplateSelected(newTemplate);
     }
   }
 
@@ -54,87 +65,111 @@ class _TemplateSelectionStepState extends State<TemplateSelectionStep> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: FormField<String>(
+              child: FormField<Invitation>(
                 validator: (value) {
-                  if (_selectedTemplate == null) {
+                  if (selectedIndex == null) {
                     return 'Please select a template';
                   }
                   return null;
                 },
-                builder: (FormFieldState<String> state) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                          ),
-                          itemCount: _templates.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == 0) {
-                              return GestureDetector(
-                                onTap: _pickImage,
-                                child: Card(
-                                  color: _selectedImage != null
-                                      ? Colors.blue.shade100
-                                      : Colors.white,
-                                  elevation: _selectedImage != null ? 4 : 1,
-                                  child: _selectedImage != null
-                                      ? Image.file(File(_selectedImage!))
-                                      : const Center(
-                                          child: Text('Upload from Gallery'),
-                                        ),
-                                ),
-                              );
-                            }
-                            final templateName = _templates[index - 1];
-                            final isSelected =
-                                _selectedTemplate == templateName;
-                            return GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _selectedTemplate = templateName;
-                                  _selectedImage = null;
-                                  state.didChange(templateName);
-                                });
-                                widget.onTemplateSelected(templateName);
-                              },
-                              child: Card(
-                                color: isSelected
-                                    ? Colors.blue.shade100
-                                    : Colors.white,
-                                elevation: isSelected ? 4 : 1,
-                                child: Center(
-                                  child: Text(
-                                    templateName,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: isSelected
-                                          ? Colors.blue
-                                          : Colors.black,
-                                    ),
+                builder: (FormFieldState<Invitation> state) {
+                  return FutureBuilder<List<Invitation>>(
+                    future: _templatesFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: SelectableText('Error: ${snapshot.error}'),
+                        );
+                      }
+                      final templates = snapshot.data ?? [];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: GridView.builder(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 10,
+                                    mainAxisSpacing: 10,
                                   ),
+                              itemCount: templates.length + 1,
+                              itemBuilder: (context, index) {
+                                if (index == 0) {
+                                  return GestureDetector(
+                                    key: const Key('pick_image_key'),
+                                    onTap: _pickImage,
+                                    child: Card(
+                                      color:
+                                          selectedIndex == 0
+                                              ? Colors.blue.shade100
+                                              : Colors.white,
+                                      elevation:
+                                          selectedIndex == 0 ? 4 : 1,
+                                      child:
+                                          selectedIndex == 0
+                                              ? Image.file(
+                                                  File(
+                                                    _selectedTemplate!.backgroundImage,
+                                                  ),
+                                                )
+                                              : const Center(
+                                                  child: Text(
+                                                    'Upload from Gallery',
+                                                  ),
+                                                ),
+                                    ),
+                                  );
+                                }
+                                // final template = templates[index - 1];
+                                final isSelected = index == selectedIndex;
+
+                                return GestureDetector(
+                                  key: Key('template_card_${index - 1}'),
+                                  onTap: () {
+                                    print(index);
+                                    setState(() {
+                                      selectedIndex = index;
+                                    });
+                                    widget.onTemplateSelected(templates[index - 1]);
+                                  },
+                                  child: Card(
+                                    color:
+                                        isSelected
+                                            ? Colors.blue.shade100
+                                            : Colors.white,
+                                    elevation: isSelected ? 4 : 1,
+                                    child: Center(
+                                      child: Stack(
+                                        children: [
+                                          Image.network(
+                                            templates[index - 1].backgroundImage,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                );
+                              }
+                            ),
+                          ),
+                          if (state.hasError)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                state.errorText!,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
                                 ),
                               ),
-                            );
-                          },
-                        ),
-                      ),
-                      if (state.hasError)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            state.errorText!,
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.error),
-                          ),
-                        ),
-                    ],
+                            ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),

@@ -7,6 +7,7 @@ import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/event_status.dart';
 import 'package:txt_invite/src/models/event_settings.dart';
 import 'package:txt_invite/src/models/guest.dart';
+import 'package:txt_invite/src/models/invitation.dart';
 import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/confirmation_step.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/event_details_step.dart';
@@ -48,7 +49,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _startTime;
   DateTime? _endTime;
-  String? _selectedTemplate;
+  Invitation? _selectedTemplate;
   EventSettings _eventSettings = EventSettings();
   List<Guest> _selectedGuestList = [];
   Event? _event;
@@ -131,8 +132,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         _isLoading = true;
       });
       try {
-        final testFilePath = _selectedTemplate;
-        final file = File(testFilePath!);
+        final testFilePath = _selectedTemplate!.backgroundImage;
+        final file = File(testFilePath);
         final user = Api().auth.currentUser;
         final imgUrl = await Api().storage.uploadFile(
           file,
@@ -253,7 +254,35 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     ),
                     InvitationCustomizationStep(
                       formKey: _formKeys[2],
-                      selectedTemplate: _selectedTemplate,
+                      selectedTemplate: Invitation(
+                        backgroundImage: _selectedTemplate?.backgroundImage ?? '',
+                        textElements: [
+                          TextElement(
+                            content: _titleController.text,
+                            fontFace: FONTS[0],
+                            size: 48,
+                            color: Colors.white,
+                            x: 200,
+                            y: 150,),
+                          TextElement(
+                            content: "Start: ${dateTimeFormat.format(_startTime?.toLocal() ?? DateTime.now())}",
+                            fontFace: FONTS[1],
+                            size: 32,
+                            color: Colors.white,
+                            x: 200,
+                            y: 200),
+                          TextElement(
+                            content: "End: ${dateTimeFormat.format(_endTime?.toLocal() ?? DateTime.now())}",
+                            fontFace: FONTS[1],
+                            size: 32,
+                            color: Colors.white,
+                            x: 200,
+                            y: 225)
+                        ],
+                        imageElements: [], 
+                        width: 400, 
+                        height: 300
+                      ),
                       screenshotController: _screenshotController,
                     ),
                     GuestListManagementStep(
@@ -280,7 +309,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       description: _descriptionController.text,
                       startTime: _startTime,
                       endTime: _endTime,
-                      selectedTemplate: _selectedTemplate,
                       guestList: _selectedGuestList,
                       settings: _eventSettings,
                       invitationImage: _invitationImage

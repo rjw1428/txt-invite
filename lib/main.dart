@@ -10,6 +10,7 @@ import 'package:txt_invite/src/services/firebase/firebase_guest_list_service.dar
 import 'package:txt_invite/src/services/firebase/firebase_storage_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_comment_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_notification_service.dart';
+import 'package:txt_invite/src/services/firebase/firebase_template_service.dart';
 import 'package:txt_invite/src/services/telephony_service.dart';
 import 'package:txt_invite/src/ui/screens/event_history_screen.dart';
 import 'package:txt_invite/src/ui/screens/guest_list_screen.dart';
@@ -33,6 +34,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     TelephonyService(),
     FirebaseCommentService(),
     FirebaseNotificationService(),
+    FirebaseTemplateService()
   );
   await Api().notifications.handleBackgroundMessage(message);
 }
@@ -127,6 +129,7 @@ void main() async {
     TelephonyService(),
     FirebaseCommentService(),
     FirebaseNotificationService(),
+    FirebaseTemplateService()
   );
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);

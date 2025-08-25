@@ -15,7 +15,6 @@ class ConfirmationStep extends StatefulWidget {
   final String description;
   final DateTime? startTime;
   final DateTime? endTime;
-  final String? selectedTemplate;
   final EventSettings settings;
   final List<Guest> guestList;
   final Uint8List? invitationImage;
@@ -27,7 +26,6 @@ class ConfirmationStep extends StatefulWidget {
     required this.description,
     required this.startTime,
     required this.endTime,
-    required this.selectedTemplate,
     required this.settings,
     required this.guestList,
     required this.invitationImage,

@@ -1,4 +1,6 @@
 
+import 'package:txt_invite/src/interfaces/template_service.dart';
+
 import '../interfaces/auth_service.dart';
 import '../interfaces/comment_service.dart';
 import '../interfaces/event_service.dart';
@@ -21,7 +23,8 @@ class Api {
       required this.storage,
       required this.messaging,
       required this.comments,
-      required this.notifications});
+      required this.notifications,
+      required this.templateService});
 
   static void initialize(
       AuthService auth,
@@ -30,7 +33,8 @@ class Api {
       StorageService storage,
       MessagingService messaging,
       CommentService comments,
-      NotificationService notifications) {
+      NotificationService notifications,
+      TemplateService templateService) {
     _instance = Api._(
         auth: auth,
         events: events,
@@ -38,7 +42,8 @@ class Api {
         storage: storage,
         messaging: messaging,
         comments: comments,
-        notifications: notifications);
+        notifications: notifications,
+        templateService: templateService);
   }
 
   final AuthService auth;
@@ -48,4 +53,5 @@ class Api {
   final MessagingService messaging;
   final CommentService comments;
   final NotificationService notifications;
+  final TemplateService templateService;
 }
