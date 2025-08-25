@@ -1,8 +1,11 @@
+import 'package:txt_invite/src/models/rsvp.dart';
+
 class Guest {
   final String? id;
   final String? firstName;
   final String? lastName;
   final String phoneNumber;
+  Rsvp? rsvp; // Will not be present unless added via withRsvp
 
   Guest({this.id, this.firstName, this.lastName, required this.phoneNumber});
 
@@ -31,5 +34,10 @@ class Guest {
       lastName: lastName ?? this.lastName,
       phoneNumber: phoneNumber ?? this.phoneNumber,
     );
+  }
+
+  withRsvp(Rsvp rsvp) {
+    this.rsvp = rsvp;
+    return this;
   }
 }

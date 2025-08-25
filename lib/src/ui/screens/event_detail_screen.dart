@@ -38,7 +38,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     if (event == null) {
       throw Exception('Event not found');
     }
-    _guestListFuture = Api().events.getGuests(event.id);
+    _guestListFuture = Api().events.getGuests(event.id).then((guestList) async {
+      if (event.settings.rsvpRequired) {
+        final rsvps = await Api().events.getRsvps(event.id);
+        final rsvpMap = {for (var rsvp in rsvps) rsvp.id: rsvp};
+        for (var guest in guestList) {
+          guest = guest.withRsvp(rsvpMap[guest.id] ?? Rsvp(id: guest.id!, status: RsvpStatus.pending));
+        }
+      }
+      return guestList;
+    });
+
     return event;
   }
 
@@ -276,15 +286,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                             CrossAxisAlignment.start,
                                         children:
                                             guestList.map((guest) {
-                                              final rsvp = event.rsvps.firstWhere(
-                                                (r) => r.id == guest.id,
-                                                orElse:
-                                                    () => Rsvp(
-                                                      id: guest.id!,
-                                                      status:
-                                                          RsvpStatus.pending,
-                                                    ), // Default to pending if no RSVP found
-                                              );
                                               if (guest.id == widget.guestId) {
                                                 return Row(
                                                   children: [
@@ -293,7 +294,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                                     ),
                                                     const SizedBox(width: 8),
                                                     DropdownButton<RsvpStatus>(
-                                                      value: rsvp.status,
+                                                      value: guest.rsvp!.status,
                                                       onChanged: (newStatus) {
                                                         if (newStatus != null) {
                                                           _showRsvpConfirmationDialog(
@@ -321,7 +322,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                                 );
                                               } else {
                                                 return Text(
-                                                  '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(rsvp.status)})',
+                                                  '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(guest.rsvp!.status)})',
                                                 );
                                               }
                                             }).toList(),

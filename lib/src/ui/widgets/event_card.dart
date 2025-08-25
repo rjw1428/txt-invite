@@ -107,23 +107,26 @@ class _EventCardState extends State<EventCard> {
                   onConfirm: (reason, skipDeclinedGuests) async {
                     await Api().events.cancelEvent(event.id);
                     final guestList = await Api().events.getGuests(event.id);
-                    if (guestList.isNotEmpty) {
+                    final rsvpList = await Api().events.getRsvps(event.id);
+                    if (rsvpList.isNotEmpty) {
                       final guestsToSend =
-                          guestList.where((guest) {
-                            if (!skipDeclinedGuests) {
-                              return true;
-                            }
-                            final rsvp = event.rsvps.firstWhere(
-                              (r) => r.id == guest.id,
-                              orElse:
-                                  () => Rsvp(
-                                    id: guest.id!,
-                                    status: RsvpStatus.pending,
-                                  ),
-                            );
-                            print('Guest ${guest.firstName} ${guest.lastName} has RSVP status: ${rsvp.status}');
-                            return rsvp.status != RsvpStatus.notAttending;
-                          }).toList();
+                          rsvpList
+                              .where((rsvp) {
+                                if (!skipDeclinedGuests) {
+                                  return true;
+                                }
+                                return rsvp.status != RsvpStatus.notAttending;
+                              })
+                              .map((rsvp) {
+                                final guest = guestList.firstWhere(
+                                  (g) => g.id == rsvp.id,
+                                  orElse: () => Guest(id: '', phoneNumber: ''),
+                                );
+                                return (guest.id!.isNotEmpty) // This shouldn't happen
+                                    ? guest
+                                    : Guest(id: '', phoneNumber: '');
+                              })
+                              .toList();
 
                       for (final guest in guestsToSend) {
                         await Api().messaging.sendCancellationMessage(

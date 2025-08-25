@@ -20,7 +20,6 @@ class Rsvp {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'status': status.index,
     };
   }

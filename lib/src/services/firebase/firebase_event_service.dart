@@ -43,7 +43,7 @@ class FirebaseEventService implements EventService {
         .where('endTime', isGreaterThanOrEqualTo: filterTime)
         .where('status', isEqualTo: EventStatus.active.toString())
         .orderBy('startTime')
-        .limit(10);
+        .limit(5);
 
     if (lastDocument != null) {
       query = query.startAfterDocument(lastDocument);
@@ -68,7 +68,7 @@ class FirebaseEventService implements EventService {
         .collection('events')
         .where('createdBy', isEqualTo: uid)
         .orderBy('startTime', descending: true)
-        .limit(3);
+        .limit(5);
 
     if (lastDocument != null) {
       query = query.startAfterDocument(lastDocument);
@@ -93,6 +93,28 @@ class FirebaseEventService implements EventService {
   }
 
   @override
+  Future<Rsvp?> getRsvp(String eventId, String guestId) async {
+    final rsvpRef = _firestore.collection('events').doc(eventId).collection('rsvps').doc(guestId);
+    final snapshot = await rsvpRef.get();
+
+    if (!snapshot.exists) {
+      return null;
+    }
+
+    return Rsvp.fromMap({'id': snapshot.id, ...snapshot.data()!});
+  }
+
+  @override
+  Future<List<Rsvp>> getRsvps(String eventId) async {
+    final rsvpsRef = _firestore.collection('events').doc(eventId).collection('rsvps');
+    final snapshot = await rsvpsRef.get();
+    if (snapshot.docs.isEmpty) {
+      return [];
+    }
+    return snapshot.docs.map((doc) => Rsvp.fromMap({'id': doc.id, ...doc.data()})).toList();
+  }
+
+  @override
   Future<void> updateRsvp({
     required String eventId,
     required String guestId,
@@ -103,38 +125,26 @@ class FirebaseEventService implements EventService {
     final eventRef = _firestore.collection('events').doc(eventId);
     final eventDoc = await eventRef.get();
 
+    // Make sure the event exists
     if (!eventDoc.exists) {
       throw Exception('Event not found');
     }
-    final eventData = {'id': eventId, ...eventDoc.data()!};
-    final event = Event.fromMap(eventData);
 
-    // Fetch guests from the subcollection
     final guestListSnapshot = await eventRef.collection('guestList').get();
     if (guestListSnapshot.docs.isEmpty) {
       throw Exception('Guest List not found for this event');
     }
 
-    final guests = guestListSnapshot.docs.map((doc) => Guest.fromMap(doc.data())).toList();
-    try {
-      // Verify guest is in the guest list
-      guests.firstWhere((guest) => guest.id == guestId);
-    } catch (e) {
+    // Make sure guest exists
+    final guestDoc = await eventRef.collection('guestList').doc(guestId).get();
+    if (!guestDoc.exists) {
       throw Exception('Guest not found in Guest List');
     }
 
-    // If guestId is already in the rsvps, remove it before adding
-    final currentRsvps = event.rsvps;
-    if (currentRsvps.any((r) => r.id == guestId)) {
-      await eventRef.update({
-        'rsvps': FieldValue.arrayRemove([
-          currentRsvps.firstWhere((r) => r.id == guestId).toMap(),
-        ]),
-      });
-    }
-    await eventRef.update({
-      'rsvps': FieldValue.arrayUnion([rsvp.toMap()]),
-    });
+    // Write RSVP/UPDATE
+    final rsvpRef = eventRef.collection('rsvps').doc(guestId);
+    // final rsvpDoc = await rsvpRef.get(); // Should not matter if it exists or not
+    await rsvpRef.set(rsvp.toMap(), SetOptions(merge: true));
   }
 
   @override

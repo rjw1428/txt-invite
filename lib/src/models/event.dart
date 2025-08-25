@@ -14,7 +14,9 @@ class Event {
   final String invitationImageUrl;
   final String invitationImageThumbnailUrl;
   final String createdBy;
-  final List<Rsvp> rsvps;
+  final int attendingCount;
+  final int notAttendingCount;
+  final int maybeCount;
   final int inviteCount;
   final EventStatus status;
   final EventSettings settings;
@@ -31,7 +33,9 @@ class Event {
     required this.invitationImageThumbnailUrl,
     required this.createdBy,
     required this.settings,
-    this.rsvps = const [],
+    this.attendingCount = 0,
+    this.notAttendingCount = 0,
+    this.maybeCount = 0,
     this.inviteCount = 0,
     this.status = EventStatus.active,
     this.guestList = const [],
@@ -40,10 +44,10 @@ class Event {
 
   Map<RsvpStatus, int> get rsvpCounts {
     final counts = <RsvpStatus, int>{
-      RsvpStatus.attending: rsvps.where((rsvp) => rsvp.status == RsvpStatus.attending).length,
-      RsvpStatus.notAttending: rsvps.where((rsvp) => rsvp.status == RsvpStatus.notAttending).length,
-      RsvpStatus.maybe: rsvps.where((rsvp) => rsvp.status == RsvpStatus.maybe).length,
-      RsvpStatus.pending: inviteCount - rsvps.length,
+      RsvpStatus.attending: attendingCount,
+      RsvpStatus.notAttending: notAttendingCount,
+      RsvpStatus.maybe: maybeCount,
+      RsvpStatus.pending: inviteCount - (attendingCount + notAttendingCount + maybeCount),
     };
     return counts;
   }
@@ -57,7 +61,9 @@ class Event {
     String? invitationImageUrl,
     String? invitationImageThumbnailUrl,
     String? createdBy,
-    List<Rsvp>? rsvps,
+    int? attendingCount,
+    int? notAttendingCount,
+    int? maybeCount,
     int? inviteCount,
     EventStatus? status,
     EventSettings? settings,
@@ -73,7 +79,9 @@ class Event {
       invitationImageUrl: invitationImageUrl ?? this.invitationImageUrl,
       invitationImageThumbnailUrl: invitationImageThumbnailUrl ?? this.invitationImageThumbnailUrl,
       createdBy: createdBy ?? this.createdBy,
-      rsvps: rsvps ?? this.rsvps,
+      attendingCount: attendingCount ?? this.attendingCount,
+      notAttendingCount: notAttendingCount ?? this.notAttendingCount,
+      maybeCount: maybeCount ?? this.maybeCount,
       inviteCount: inviteCount ?? this.inviteCount,
       status: status ?? this.status,
       settings: settings ?? this.settings,
@@ -92,7 +100,9 @@ class Event {
       invitationImageUrl: map['invitationImageUrl'],
       invitationImageThumbnailUrl: map['invitationImageThumbnailUrl'],
       createdBy: map['createdBy'],
-      rsvps: (map['rsvps'] as List<dynamic>).map((e) => Rsvp.fromMap(e)).toList(),
+      attendingCount: map['attendingCount'] ?? 0,
+      notAttendingCount: map['notAttendingCount'] ?? 0,
+      maybeCount: map['maybeCount'] ?? 0,
       inviteCount: map['inviteCount'] ?? 99,
       status: EventStatus.values.firstWhere((e) => e.toString() == map['status'], orElse: () => EventStatus.active),
       settings: EventSettings.fromMap(map['settings'] ?? {}),
@@ -111,7 +121,9 @@ class Event {
       'invitationImageThumbnailUrl': invitationImageThumbnailUrl,
       'qrCodeImageUrl': qrCodeImageUrl,
       'createdBy': createdBy,
-      'rsvps': rsvps.map((rsvp) => rsvp.toMap()).toList(),
+      'attendingCount': attendingCount,
+      'notAttendingCount': notAttendingCount,
+      'maybeCount': maybeCount,
       'inviteCount': inviteCount,
       'status': status.toString(),
       'settings': settings.toMap(),

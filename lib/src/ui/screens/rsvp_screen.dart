@@ -22,6 +22,8 @@ class _RsvpScreenState extends State<RsvpScreen> {
   Event? _event;
   Guest? _guest;
   bool _isLoading = true;
+  bool _hasResponded = false;
+  RsvpStatus? _initialStatus;
 
   @override
   void initState() {
@@ -40,29 +42,32 @@ class _RsvpScreenState extends State<RsvpScreen> {
         throw Exception('Guest not found');
       }
 
-      final existingRsvp = event.rsvps.firstWhere(
-        (rsvp) => rsvp.id == guest.id,
-        orElse: () => Rsvp(id: guest.id!, status: RsvpStatus.pending),
-      );
+      Rsvp rsvp =
+          await Api().events.getRsvp(event.id, widget.guestId) ??
+          Rsvp(id: widget.guestId, status: RsvpStatus.pending);
 
-      if (existingRsvp.status != RsvpStatus.pending || !event.settings.rsvpRequired) {
-        GoRouter.of(context).go('/events/${widget.eventId}?guestId=${widget.guestId}');
+      if (rsvp.status != RsvpStatus.pending || !event.settings.rsvpRequired) {
+        GoRouter.of(
+          context,
+        ).go('/events/${widget.eventId}?guestId=${widget.guestId}');
         return;
       }
 
       setState(() {
         _event = event;
         _guest = guest;
-        _selectedStatus = existingRsvp.status;
+        _selectedStatus = rsvp.status;
         _isLoading = false;
+        _hasResponded = rsvp.status != RsvpStatus.pending;
+        _initialStatus = rsvp.status;
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading data: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading data: $e')));
     }
   }
 
@@ -78,22 +83,27 @@ class _RsvpScreenState extends State<RsvpScreen> {
     if (_event == null) {
       return Scaffold(
         appBar: AppBar(title: Text('RSVP')),
-        body: Center(child: Text('Error loading details: The event was not found. It may have been canceled. Check with the host')),
+        body: Center(
+          child: Text(
+            'Error loading details: The event was not found. It may have been canceled. Check with the host',
+          ),
+        ),
       );
     }
 
     if (_guest == null) {
       return Scaffold(
         appBar: AppBar(title: Text('RSVP')),
-        body: Center(child: Text('Error loading details: Your invitation was not found. Check wit hthe host')),
+        body: Center(
+          child: Text(
+            'Error loading details: Your invitation was not found. Check wit hthe host',
+          ),
+        ),
       );
     }
 
     final event = _event!;
     final guest = _guest!;
-    bool hasResponded = event.rsvps.any(
-      (rsvp) => rsvp.id == guest.id,
-    );
 
     return Scaffold(
       appBar: AppBar(title: const Text('RSVP')),
@@ -120,9 +130,7 @@ class _RsvpScreenState extends State<RsvpScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SelectableText(
-                  'Description: ${event.description}',
-                ),
+                SelectableText('Description: ${event.description}'),
                 Text(
                   'Date: ${dateTimeFormat.format(event.startTime)} - ${dateTimeFormat.format(event.endTime)}',
                 ),
@@ -132,9 +140,9 @@ class _RsvpScreenState extends State<RsvpScreen> {
                   style: const TextStyle(fontSize: 18),
                 ),
                 const SizedBox(height: 16),
-                if (hasResponded)
+                if (_hasResponded)
                   Text(
-                    'You have already RSVP\'d: ${RsvpStatus.values.firstWhere((status) => status == event.rsvps.firstWhere((rsvp) => rsvp.id == guest.id).status).toString().split('.').last}.',
+                    'You have already RSVP\'d: ${RsvpStatus.values.firstWhere((status) => status == _initialStatus).toString().split('.').last}.',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -142,7 +150,10 @@ class _RsvpScreenState extends State<RsvpScreen> {
                   ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<RsvpStatus>(
-                  value: _selectedStatus == RsvpStatus.pending ? null : _selectedStatus,
+                  value:
+                      _selectedStatus == RsvpStatus.pending
+                          ? null
+                          : _selectedStatus,
                   decoration: const InputDecoration(
                     labelText: 'Your RSVP',
                     border: OutlineInputBorder(),
@@ -153,9 +164,7 @@ class _RsvpScreenState extends State<RsvpScreen> {
                           .map((status) {
                             return DropdownMenuItem(
                               value: status,
-                              child: Text(
-                                status.toString().split('.').last,
-                              ),
+                              child: Text(status.toString().split('.').last),
                             );
                           })
                           .toList(),
@@ -186,21 +195,17 @@ class _RsvpScreenState extends State<RsvpScreen> {
                             content: Text('RSVP submitted successfully!'),
                           ),
                         );
-                        GoRouter.of(
-                          context,
-                        ).go('/events/${widget.eventId}?guestId=${widget.guestId}');
+                        GoRouter.of(context).go(
+                          '/events/${widget.eventId}?guestId=${widget.guestId}',
+                        );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Failed to submit RSVP: $e'),
-                          ),
+                          SnackBar(content: Text('Failed to submit RSVP: $e')),
                         );
                       }
                     }
                   },
-                  child: Text(
-                    hasResponded ? 'Update RSVP' : 'Submit RSVP',
-                  ),
+                  child: Text(_hasResponded ? 'Update RSVP' : 'Submit RSVP'),
                 ),
               ],
             ),
