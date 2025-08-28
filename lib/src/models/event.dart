@@ -22,6 +22,7 @@ class Event {
   final EventSettings settings;
   final List<Guest> guestList;
   final String? qrCodeImageUrl;
+  final String? location;
 
   Event({
     required this.id,
@@ -40,6 +41,7 @@ class Event {
     this.status = EventStatus.active,
     this.guestList = const [],
     this.qrCodeImageUrl,
+    this.location,
   });
 
   Map<RsvpStatus, int> get rsvpCounts {
@@ -69,6 +71,7 @@ class Event {
     EventSettings? settings,
     List<Guest>? guestList,
     String? qrCodeImageUrl,
+    String? location,
   }) {
     return Event(
       id: id ?? this.id,
@@ -87,6 +90,7 @@ class Event {
       settings: settings ?? this.settings,
       guestList: guestList ?? this.guestList,
       qrCodeImageUrl: qrCodeImageUrl ?? this.qrCodeImageUrl,
+      location: location ?? this.location,
     );
   }
 
@@ -108,6 +112,7 @@ class Event {
       settings: EventSettings.fromMap(map['settings'] ?? {}),
       guestList: (map['guestList'] as List<dynamic>?)?.map((e) => Guest.fromMap(e)).toList() ?? [],
       qrCodeImageUrl: map['qrCodeImageUrl'],
+      location: map['location'],
     );
   }
 
@@ -120,6 +125,7 @@ class Event {
       'invitationBackground': invitationBackground,
       'invitationImageThumbnailUrl': invitationImageThumbnailUrl,
       'qrCodeImageUrl': qrCodeImageUrl,
+      'location': location,
       'createdBy': createdBy,
       'attendingCount': attendingCount,
       'notAttendingCount': notAttendingCount,

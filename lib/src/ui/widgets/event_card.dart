@@ -210,6 +210,14 @@ class _EventCardState extends State<EventCard> {
                 style: const TextStyle(fontSize: 16),
                 linkStyle: const TextStyle(color: Colors.blue),
               ),
+              if (event.location != null && event.location!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    'Location: ${event.location}',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
               const SizedBox(height: 8),
               Text(
                 'Starts: ${dateTimeFormat.format(event.startTime.toLocal())}',

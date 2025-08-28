@@ -10,6 +10,9 @@ class EventDetailsStep extends StatefulWidget {
   final DateTime? endTime;
   final Function(DateTime?) onStartTimeChanged;
   final Function(DateTime?) onEndTimeChanged;
+  final TextEditingController locationController;
+  final bool isLocationOptional;
+  final Function(bool) onLocationOptionalChanged;
 
   const EventDetailsStep({
     super.key,
@@ -20,6 +23,9 @@ class EventDetailsStep extends StatefulWidget {
     required this.endTime,
     required this.onStartTimeChanged,
     required this.onEndTimeChanged,
+    required this.locationController,
+    required this.isLocationOptional,
+    required this.onLocationOptionalChanged,
   });
 
   @override
@@ -112,7 +118,7 @@ class EventDetailsStepState extends State<EventDetailsStep> {
               controller: widget.descriptionController,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
-                labelText: 'Event Description',
+                labelText: 'Description',
               ),
               maxLines: 3,
               validator: (value) {
@@ -121,6 +127,37 @@ class EventDetailsStepState extends State<EventDetailsStep> {
                 }
                 return null;
               },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: widget.locationController,
+                    decoration: const InputDecoration(
+                      labelText: 'Location',
+                    ),
+                    onChanged: (value) {
+                      widget.onLocationOptionalChanged(value.isEmpty);
+                    },
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('N/A'),
+                    Checkbox(
+                      value: widget.isLocationOptional,
+                      onChanged: (value) {
+                        widget.onLocationOptionalChanged(value!);
+                        if (value) {
+                          widget.locationController.clear();
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
             ListTile(
               title: Text(widget.startTime == null

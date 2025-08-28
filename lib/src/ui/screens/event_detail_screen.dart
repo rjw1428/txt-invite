@@ -179,6 +179,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          if (event.location != null)
+                            SelectableText('Location: ${event.location}'),
                           const SizedBox(height: 8),
                           SelectableLinkify(
                             onOpen: (link) async {
@@ -208,7 +210,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 final calEvent = add2calendar.Event(
                                   title: event.title,
                                   description: event.description,
-                                  location: '',
+                                  location: event.location ?? '',
                                   startDate: event.startTime,
                                   endDate: event.endTime,
                                 );

@@ -47,6 +47,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final GlobalKey<EventDetailsStepState> _eventDetailsStepKey = GlobalKey<EventDetailsStepState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+  bool _isLocationOptional = true;
   DateTime? _startTime;
   DateTime? _endTime;
   Invitation? _selectedTemplate;
@@ -62,6 +64,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     _pageController.dispose();
     _titleController.dispose();
     _descriptionController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -158,6 +161,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           id: '',
           title: _titleController.text,
           description: _descriptionController.text,
+          location: _isLocationOptional ? null : _locationController.text,
           startTime: _startTime!,
           endTime: _endTime!,
           invitationBackground: imgUrl,
@@ -241,6 +245,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       formKey: _formKeys[0],
                       titleController: _titleController,
                       descriptionController: _descriptionController,
+                      locationController: _locationController,
+                      isLocationOptional: _isLocationOptional,
+                      onLocationOptionalChanged: (value) {
+                        setState(() {
+                          _isLocationOptional = value;
+                        });
+                      },
                       startTime: _startTime,
                       endTime: _endTime,
                       onStartTimeChanged: (dateTime) {
@@ -274,6 +285,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                             color: Colors.white,
                             x: 200,
                             y: 150,),
+                          TextElement(
+                            content: _locationController.text,
+                            fontFace: FONTS[1],
+                            size: 32,
+                            color: Colors.white,
+                            x: 200,
+                            y: 200),
                           TextElement(
                             content: "Start: ${dateTimeFormat.format(_startTime?.toLocal() ?? DateTime.now())}",
                             fontFace: FONTS[1],
@@ -318,6 +336,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       formKey: _formKeys[5],
                       title: _titleController.text,
                       description: _descriptionController.text,
+                      location: _isLocationOptional ? null : _locationController.text,
                       startTime: _startTime,
                       endTime: _endTime,
                       guestList: _selectedGuestList,

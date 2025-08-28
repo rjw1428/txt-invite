@@ -17,6 +17,7 @@ class ConfirmationStep extends StatefulWidget {
   final EventSettings settings;
   final List<Guest> guestList;
   final Uint8List? invitationImage;
+  final String? location;
 
   const ConfirmationStep({
     super.key,
@@ -28,6 +29,7 @@ class ConfirmationStep extends StatefulWidget {
     required this.settings,
     required this.guestList,
     required this.invitationImage,
+    this.location,
   });
 
   @override
@@ -84,6 +86,14 @@ class _ConfirmationStepState extends State<ConfirmationStep> {
               style: const TextStyle(fontSize: 16),
               linkStyle: const TextStyle(color: Colors.blue),
             ),
+            if (widget.location != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: SelectableText(
+                  'Location: ${widget.location}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
             const SizedBox(height: 16),
             SelectableText(
               'Starts: ${dateTimeFormat.format(widget.startTime!.toLocal())}',

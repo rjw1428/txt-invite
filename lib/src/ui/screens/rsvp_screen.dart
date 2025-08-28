@@ -131,6 +131,8 @@ class _RsvpScreenState extends State<RsvpScreen> {
                   ),
                 ),
                 SelectableText('Description: ${event.description}'),
+                if (event.location != null)
+                  SelectableText('Location: ${event.location}'),
                 Text(
                   'Date: ${dateTimeFormat.format(event.startTime)} - ${dateTimeFormat.format(event.endTime)}',
                 ),
