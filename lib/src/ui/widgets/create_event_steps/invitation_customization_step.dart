@@ -13,11 +13,13 @@ class InvitationCustomizationStep extends StatefulWidget {
     required this.formKey,
     required this.selectedTemplate,
     required this.screenshotController,
+    required this.isTakingScreenshot,
   });
 
   final GlobalKey<FormState> formKey;
   final Invitation selectedTemplate;
   final ScreenshotController screenshotController;
+  final bool isTakingScreenshot;
 
   @override
   State<InvitationCustomizationStep> createState() =>
@@ -71,7 +73,37 @@ class _InvitationCustomizationStepState
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isTakingScreenshot) {
+      selectedElement = null;
+    }
     return Scaffold(
+        floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: _pickImage,
+            child: const Icon(Icons.add_a_photo),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: () {
+              setState(() {
+                _invitation.textElements.add(
+                  TextElement(
+                    content: 'New Text',
+                    x: 50,
+                    y: 50,
+                    size: 20,
+                    color: Colors.black,
+                    fontFace: 'Roboto',
+                  ),
+                );
+              });
+            },
+            child: const Icon(Icons.add),
+          ),
+        ],
+      ),
         body: Form(
       key: widget.formKey,
       child: Column(
@@ -252,9 +284,18 @@ class _InvitationCustomizationStepState
                     },
                   ),
                   const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: _pickImage,
-                    child: const Text('Pick Image'),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _invitation.textElements.remove(selectedText);
+                      });
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.delete),
+                    label: const Text('Delete'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
                   ),
                 ],
               ),

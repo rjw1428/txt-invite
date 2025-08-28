@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:txt_invite/src/models/event_settings.dart';
 import 'package:txt_invite/src/models/guest.dart';

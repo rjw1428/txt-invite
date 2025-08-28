@@ -11,7 +11,7 @@ class Event {
   final String description;
   final DateTime startTime;
   final DateTime endTime;
-  final String invitationImageUrl;
+  final String invitationBackground;
   final String invitationImageThumbnailUrl;
   final String createdBy;
   final int attendingCount;
@@ -29,7 +29,7 @@ class Event {
     required this.description,
     required this.startTime,
     required this.endTime,
-    required this.invitationImageUrl,
+    required this.invitationBackground,
     required this.invitationImageThumbnailUrl,
     required this.createdBy,
     required this.settings,
@@ -58,7 +58,7 @@ class Event {
     String? description,
     DateTime? startTime,
     DateTime? endTime,
-    String? invitationImageUrl,
+    String? invitationBackground,
     String? invitationImageThumbnailUrl,
     String? createdBy,
     int? attendingCount,
@@ -76,7 +76,7 @@ class Event {
       description: description ?? this.description,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
-      invitationImageUrl: invitationImageUrl ?? this.invitationImageUrl,
+      invitationBackground: invitationBackground ?? this.invitationBackground,
       invitationImageThumbnailUrl: invitationImageThumbnailUrl ?? this.invitationImageThumbnailUrl,
       createdBy: createdBy ?? this.createdBy,
       attendingCount: attendingCount ?? this.attendingCount,
@@ -97,7 +97,7 @@ class Event {
       description: map['description'],
       startTime: (map['startTime'] as Timestamp).toDate(),
       endTime: (map['endTime'] as Timestamp).toDate(),
-      invitationImageUrl: map['invitationImageUrl'],
+      invitationBackground: map['invitationBackground'],
       invitationImageThumbnailUrl: map['invitationImageThumbnailUrl'],
       createdBy: map['createdBy'],
       attendingCount: map['attendingCount'] ?? 0,
@@ -117,7 +117,7 @@ class Event {
       'description': description,
       'startTime': Timestamp.fromDate(startTime),
       'endTime': Timestamp.fromDate(endTime),
-      'invitationImageUrl': invitationImageUrl,
+      'invitationBackground': invitationBackground,
       'invitationImageThumbnailUrl': invitationImageThumbnailUrl,
       'qrCodeImageUrl': qrCodeImageUrl,
       'createdBy': createdBy,

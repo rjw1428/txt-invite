@@ -55,6 +55,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Event? _event;
   bool _isLoading = false;
   Uint8List? _invitationImage;
+  bool _isTakingScreenshot = false;
 
   @override
   void dispose() {
@@ -80,6 +81,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     if (isValid) {
       if (_currentPage == CreateEventSteps.invitationCustomization) {
+        setState(() {
+          _isTakingScreenshot = true; // Hack to remove the border of selected text
+        });
         try {
           _invitationImage = await _screenshotController.capture();
         } catch (e) {
@@ -88,6 +92,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             SnackBar(content: Text('Failed to create invitation image: $e')),
           );
           return;
+        } finally {
+          setState(() {
+            _isTakingScreenshot = false;
+          });
         }
       }
 
@@ -132,17 +140,19 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         _isLoading = true;
       });
       try {
-        final testFilePath = _selectedTemplate!.backgroundImage;
-        final file = File(testFilePath);
         final user = Api().auth.currentUser;
-        final imgUrl = await Api().storage.uploadFile(
-          file,
-          'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}.png',
-        );
-
+        String? imgUrl = _selectedTemplate!.backgroundImage;
+        if (_selectedTemplate!.backgroundImage.startsWith('/')) {
+          final testFilePath = _selectedTemplate!.backgroundImage;
+          final file = File(testFilePath);
+          imgUrl = await Api().storage.uploadFile(
+            file,
+            'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}_background.png',
+          );
+        }
         final invitationThumbnailImageUrl = await Api().storage.uploadBytes(
           _invitationImage!,
-          'invitations/${user.id}_${DateTime.now().millisecondsSinceEpoch}_preview.png',
+          'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}_preview.png',
         );
         final newEvent = Event(
           id: '',
@@ -150,7 +160,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           description: _descriptionController.text,
           startTime: _startTime!,
           endTime: _endTime!,
-          invitationImageUrl: imgUrl,
+          invitationBackground: imgUrl,
           invitationImageThumbnailUrl: invitationThumbnailImageUrl,
           createdBy: user.id,
           status: EventStatus.active,
@@ -284,6 +294,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         height: 300
                       ),
                       screenshotController: _screenshotController,
+                      isTakingScreenshot: _isTakingScreenshot,
                     ),
                     GuestListManagementStep(
                       formKey: _formKeys[3],
