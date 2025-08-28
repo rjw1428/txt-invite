@@ -134,14 +134,23 @@ class _InvitationCustomizationStepState
                     // Draggable Text
                     ..._invitation.textElements.map((textElement) {
                       return Positioned(
+                        key: ObjectKey(textElement),
                         left: textElement.x,
                         top: textElement.y,
                         child: GestureDetector(
+                          onPanStart: (details) {
+                            final newTextElements = List<TextElement>.from(_invitation.textElements);
+                            setState(() {
+                              selectedElement = textElement;
+                              newTextElements.remove(textElement);
+                              newTextElements.add(textElement);
+                              _invitation = _invitation.copyWith(textElements: newTextElements);
+                            });
+                          },
                           onPanUpdate: (details) {
                             setState(() {
                               textElement.x += details.delta.dx;
                               textElement.y += details.delta.dy;
-                              selectedElement = textElement;
                             });
                           },
                           child: Container(
@@ -165,11 +174,16 @@ class _InvitationCustomizationStepState
                             ),
                           ),
                           onTap: () {
+                            final newTextElements = List<TextElement>.from(_invitation.textElements);
                             setState(() {
-                              selectedElement = selectedElement == null ? textElement : null;
+                              selectedElement = textElement;
+                              newTextElements.remove(textElement);
+                              newTextElements.add(textElement);
+                              _invitation = _invitation.copyWith(textElements: newTextElements);
                             });
                             if (selectedElement != null) {
-                              _showCustomizationBottomSheet(context, selectedElement!);
+                              _invitationTextController.text = selectedElement!.content;
+                              _showCustomizationBottomSheet(context, textElement);
                             }
                           },
                         ),
@@ -222,7 +236,6 @@ class _InvitationCustomizationStepState
                   TextField(
                     controller: _invitationTextController,
                     decoration: InputDecoration(
-                      labelText: selectedText.content,
                       border: const OutlineInputBorder(),
                     ),
                     onChanged: (text) {
