@@ -4,8 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:txt_invite/src/models/invitation.dart';
 import 'package:txt_invite/src/ui/widgets/color_selection_dialog.dart';
-
 import 'package:screenshot/screenshot.dart';
+import 'package:txt_invite/src/utils/constants.dart';
 
 class InvitationCustomizationStep extends StatefulWidget {
   const InvitationCustomizationStep({
@@ -29,7 +29,8 @@ class InvitationCustomizationStep extends StatefulWidget {
 class _InvitationCustomizationStepState
     extends State<InvitationCustomizationStep> {
   late Invitation _invitation;
-  final TextEditingController _invitationTextController = TextEditingController();  
+  final TextEditingController _invitationTextController =
+      TextEditingController();
   TextElement? selectedElement;
 
   @override
@@ -65,10 +66,10 @@ class _InvitationCustomizationStepState
   }
 
   String getFont(String fontName) {
-    return GoogleFonts.asMap()
-      .keys
-      .firstWhere((key) => key.toLowerCase() == fontName.toLowerCase(),
-          orElse: () => 'Roboto');
+    return GoogleFonts.asMap().keys.firstWhere(
+      (key) => key.toLowerCase() == fontName.toLowerCase(),
+      orElse: () => 'Roboto',
+    );
   }
 
   @override
@@ -77,15 +78,17 @@ class _InvitationCustomizationStepState
       selectedElement = null;
     }
     return Scaffold(
-        floatingActionButton: Column(
+      floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
+            heroTag: 'pickImageFab',
             onPressed: _pickImage,
             child: const Icon(Icons.add_a_photo),
           ),
           const SizedBox(height: 10),
           FloatingActionButton(
+            heroTag: 'addTextFab',
             onPressed: () {
               setState(() {
                 _invitation.textElements.add(
@@ -104,124 +107,151 @@ class _InvitationCustomizationStepState
           ),
         ],
       ),
-        body: Form(
-      key: widget.formKey,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Screenshot(
-              controller: widget.screenshotController,
-              child: Container(
-                width: _invitation.width,
-                height: _invitation.height,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  image: _invitation.backgroundImage.isNotEmpty
-                      ? (_invitation.backgroundImage.startsWith('/')
-                          ? DecorationImage(
-                              image: FileImage(File(_invitation.backgroundImage)),
-                              fit: BoxFit.contain,
-                            )
-                          : DecorationImage(
-                              image: NetworkImage(_invitation.backgroundImage),
-                              fit: BoxFit.contain,
-                            ))
-                      : null,
-                ),
-                child: Stack(
-                  children: [
-                    // Draggable Text
-                    ..._invitation.textElements.map((textElement) {
-                      return Positioned(
-                        key: ObjectKey(textElement),
-                        left: textElement.x,
-                        top: textElement.y,
-                        child: GestureDetector(
-                          onPanStart: (details) {
-                            final newTextElements = List<TextElement>.from(_invitation.textElements);
-                            setState(() {
-                              selectedElement = textElement;
-                              newTextElements.remove(textElement);
-                              newTextElements.add(textElement);
-                              _invitation = _invitation.copyWith(textElements: newTextElements);
-                            });
-                          },
-                          onPanUpdate: (details) {
-                            setState(() {
-                              textElement.x += details.delta.dx;
-                              textElement.y += details.delta.dy;
-                            });
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: selectedElement == textElement ? Colors.red : Colors.transparent,
-                                width: 2.0,
+      body: Form(
+        key: widget.formKey,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Screenshot(
+                controller: widget.screenshotController,
+                child: Container(
+                  width: _invitation.width,
+                  height: _invitation.height,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    image:
+                        _invitation.backgroundImage.isNotEmpty
+                            ? (_invitation.backgroundImage.startsWith('/')
+                                ? DecorationImage(
+                                  image: FileImage(
+                                    File(_invitation.backgroundImage),
+                                  ),
+                                  fit: BoxFit.contain,
+                                )
+                                : DecorationImage(
+                                  image: NetworkImage(
+                                    _invitation.backgroundImage,
+                                  ),
+                                  fit: BoxFit.contain,
+                                ))
+                            : null,
+                  ),
+                  child: Stack(
+                    children: [
+                      // Draggable Text
+                      ..._invitation.textElements.map((textElement) {
+                        return Positioned(
+                          key: ObjectKey(textElement),
+                          left: textElement.x,
+                          top: textElement.y,
+                          child: GestureDetector(
+                            onPanStart: (details) {
+                              final newTextElements = List<TextElement>.from(
+                                _invitation.textElements,
+                              );
+                              setState(() {
+                                selectedElement = textElement;
+                                newTextElements.remove(textElement);
+                                newTextElements.add(textElement);
+                                _invitation = _invitation.copyWith(
+                                  textElements: newTextElements,
+                                );
+                              });
+                            },
+                            onPanUpdate: (details) {
+                              setState(() {
+                                textElement.x += details.delta.dx;
+                                textElement.y += details.delta.dy;
+                              });
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color:
+                                      selectedElement == textElement
+                                          ? Colors.red
+                                          : Colors.transparent,
+                                  width: 2.0,
+                                ),
+                                borderRadius: BorderRadius.circular(4.0),
                               ),
-                              borderRadius: BorderRadius.circular(4.0),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            child: Text(
-                              overflow: TextOverflow.visible,
-                              textAlign: TextAlign.center,
-                              textElement.content,
-                              style: GoogleFonts.getFont(
-                                getFont(textElement.fontFace),
-                                fontSize: textElement.size,
-                                color: textElement.color,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              child: Text(
+                                overflow: TextOverflow.visible,
+                                textAlign: TextAlign.center,
+                                textElement.content,
+                                style: GoogleFonts.getFont(
+                                  getFont(textElement.fontFace),
+                                  fontSize: textElement.size,
+                                  color: textElement.color,
+                                ),
                               ),
                             ),
+                            onTap: () {
+                              final newTextElements = List<TextElement>.from(
+                                _invitation.textElements,
+                              );
+                              setState(() {
+                                selectedElement = textElement;
+                                newTextElements.remove(textElement);
+                                newTextElements.add(textElement);
+                                _invitation = _invitation.copyWith(
+                                  textElements: newTextElements,
+                                );
+                              });
+                              if (selectedElement != null) {
+                                _invitationTextController.text =
+                                    selectedElement!.content;
+                                _showCustomizationBottomSheet(
+                                  context,
+                                  textElement,
+                                );
+                              }
+                            },
                           ),
-                          onTap: () {
-                            final newTextElements = List<TextElement>.from(_invitation.textElements);
-                            setState(() {
-                              selectedElement = textElement;
-                              newTextElements.remove(textElement);
-                              newTextElements.add(textElement);
-                              _invitation = _invitation.copyWith(textElements: newTextElements);
-                            });
-                            if (selectedElement != null) {
-                              _invitationTextController.text = selectedElement!.content;
-                              _showCustomizationBottomSheet(context, textElement);
-                            }
-                          },
-                        ),
-                      );
-                    }),
+                        );
+                      }),
 
-                    // Draggable and Scalable Image
-                    ..._invitation.imageElements.map((imageElement) {
-                      return Positioned(
-                        left: imageElement.x,
-                        top: imageElement.y,
-                        child: GestureDetector(
-                          onPanUpdate: (details) {
-                            setState(() {
-                              imageElement.x += details.delta.dx;
-                              imageElement.y += details.delta.dy;
-                            });
-                          },
-                          child: Image.file(
-                            File(imageElement.imageUrl),
-                            width: imageElement.width,
-                            height: imageElement.height,
-                            fit: BoxFit.contain,
+                      // Draggable and Scalable Image
+                      ..._invitation.imageElements.map((imageElement) {
+                        return Positioned(
+                          left: imageElement.x,
+                          top: imageElement.y,
+                          child: GestureDetector(
+                            onPanUpdate: (details) {
+                              setState(() {
+                                imageElement.x += details.delta.dx;
+                                imageElement.y += details.delta.dy;
+                              });
+                            },
+                            child: Image.file(
+                              File(imageElement.imageUrl),
+                              width: imageElement.width,
+                              height: imageElement.height,
+                              fit: BoxFit.contain,
+                            ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  ],
+                        );
+                      }).toList(),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ));
+    );
   }
 
-  void _showCustomizationBottomSheet(BuildContext context, TextElement selectedText) {
+  void _showCustomizationBottomSheet(
+    BuildContext context,
+    TextElement selectedText,
+  ) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext bc) {
@@ -252,11 +282,9 @@ class _InvitationCustomizationStepState
                         child: Slider(
                           value: selectedText.size,
                           min: 10.0,
-                          max: 50.0,
+                          max: 200.0,
                           divisions: 40,
-                          label: selectedText.size
-                              .round()
-                              .toString(),
+                          label: selectedText.size.round().toString(),
                           onChanged: (value) {
                             setState(() {
                               selectedText.size = value;
@@ -265,36 +293,71 @@ class _InvitationCustomizationStepState
                           },
                         ),
                       ),
-                      Text(
-                          'Font Size: ${selectedText.size.round()}'),
+                      Text('Font Size: ${selectedText.size.round()}'),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  ListTile(
-                    title: const Text('Text Color'),
-                    trailing: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: selectedText.color,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey, width: 1),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: DropdownButton<String>(
+                          value: getFont(selectedText.fontFace),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedText.fontFace = newValue!;
+                            });
+                            this.setState(() {});
+                          },
+                          items:
+                              GoogleFonts.asMap().keys
+                                  .where(
+                                    (key) => FONTS.contains(key.toLowerCase()),
+                                  )
+                                  .map<DropdownMenuItem<String>>((
+                                    String fontName,
+                                  ) {
+                                    return DropdownMenuItem<String>(
+                                      value: fontName,
+                                      child: Text(
+                                        fontName,
+                                        style: GoogleFonts.getFont(fontName),
+                                      ),
+                                    );
+                                  })
+                                  .toList(),
+                        ),
                       ),
-                    ),
-                    onTap: () async {
-                      final selectedColor = await showDialog<Color>(
-                        context: context,
-                        builder: (context) => ColorSelectionDialog(
-                            selectedColor:
-                                selectedText.color),
-                      );
-                      if (selectedColor != null) {
-                        setState(() {
-                          selectedText.color = selectedColor;
-                          this.setState(() {});
-                        });
-                      }
-                    },
+                      Flexible(
+                        child: ListTile(
+                          title: const Text('Text Color'),
+                          trailing: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: selectedText.color,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.grey, width: 1),
+                            ),
+                          ),
+                          onTap: () async {
+                            final selectedColor = await showDialog<Color>(
+                              context: context,
+                              builder:
+                                  (context) => ColorSelectionDialog(
+                                    selectedColor: selectedText.color,
+                                  ),
+                            );
+                            if (selectedColor != null) {
+                              setState(() {
+                                selectedText.color = selectedColor;
+                                this.setState(() {});
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton.icon(
