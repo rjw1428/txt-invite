@@ -43,7 +43,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         final rsvps = await Api().events.getRsvps(event.id);
         final rsvpMap = {for (var rsvp in rsvps) rsvp.id: rsvp};
         for (var guest in guestList) {
-          guest = guest.withRsvp(rsvpMap[guest.id] ?? Rsvp(id: guest.id!, status: RsvpStatus.pending));
+          guest = guest.withRsvp(
+            rsvpMap[guest.id] ??
+                Rsvp(id: guest.id!, status: RsvpStatus.pending),
+          );
         }
       }
       return guestList;
@@ -180,14 +183,25 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             ),
                           ),
                           if (event.location != null)
-                            SelectableText('Location: ${event.location}'),
+                            SelectableLinkify(
+                              text: 'Location: ${event.location}',
+                              onOpen: (link) async {
+                                if (await canLaunchUrl(Uri.parse(link.url))) {
+                                  await launchUrl(Uri.parse(link.url));
+                                } else {
+                                  print('Could not launch ${link.url}');
+                                }
+                              },
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              linkStyle: const TextStyle(color: Colors.blue),
+                            ),
                           const SizedBox(height: 8),
                           SelectableLinkify(
                             onOpen: (link) async {
                               if (await canLaunchUrl(Uri.parse(link.url))) {
                                 await launchUrl(Uri.parse(link.url));
                               } else {
-                                 print('Could not launch ${link.url}');
+                                print('Could not launch ${link.url}');
                               }
                             },
                             text: event.description,

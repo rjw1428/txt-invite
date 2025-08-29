@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
 import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/utils/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RsvpScreen extends StatefulWidget {
   final String eventId;
@@ -132,7 +134,21 @@ class _RsvpScreenState extends State<RsvpScreen> {
                 ),
                 SelectableText('Description: ${event.description}'),
                 if (event.location != null)
-                  SelectableText('Location: ${event.location}'),
+                  SelectableLinkify(
+                    text: 'Location: ${event.location}',
+                    onOpen: (link) async {
+                      if (await canLaunchUrl(Uri.parse(link.url))) {
+                        await launchUrl(Uri.parse(link.url));
+                      } else {
+                        print('Could not launch ${link.url}');
+                      }
+                    },
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    linkStyle: const TextStyle(color: Colors.blue),
+                  ),
                 Text(
                   'Date: ${dateTimeFormat.format(event.startTime)} - ${dateTimeFormat.format(event.endTime)}',
                 ),

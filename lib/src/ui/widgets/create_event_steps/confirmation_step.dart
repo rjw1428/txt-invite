@@ -89,10 +89,19 @@ class _ConfirmationStepState extends State<ConfirmationStep> {
             if (widget.location != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
-                child: SelectableText(
-                  'Location: ${widget.location}',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                child:                          
+                            SelectableLinkify(
+                              text: 'Location: ${widget.location}',
+                              onOpen: (link) async {
+                                if (await canLaunchUrl(Uri.parse(link.url))) {
+                                  await launchUrl(Uri.parse(link.url));
+                                } else {
+                                  print('Could not launch ${link.url}');
+                                }
+                              },
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              linkStyle: const TextStyle(color: Colors.blue),
+                            ),
               ),
             const SizedBox(height: 16),
             SelectableText(
