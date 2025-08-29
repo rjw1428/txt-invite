@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/event_status.dart';
@@ -17,6 +16,7 @@ import 'package:txt_invite/src/ui/widgets/create_event_steps/invitation_customiz
 import 'package:txt_invite/src/ui/widgets/create_event_steps/sms_status_step.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/template_selection_step.dart';
 import 'package:txt_invite/src/utils/constants.dart';
+import 'package:txt_invite/src/utils/functions.dart';
 
 enum CreateEventSteps {
   eventDetails,
@@ -179,24 +179,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         );
 
         if (_eventSettings.qrCodeEnabled) {
-          final anonymousGuest = Guest(firstName: ANONYMOUS_GUEST_NAME, lastName: '', phoneNumber: '');
-          final addedGuest = await Api().events.addGuest(event.id, anonymousGuest);
-
-          final qrPainter = QrPainter(
-            data: 'https://txt-invitation.web.app/events/${event.id}?guestId=${addedGuest.id}',
-            version: QrVersions.auto,
-            gapless: false,
-          );
-
-          final picData = await qrPainter.toImageData(200);
-          final qrBytes = picData!.buffer.asUint8List();
-
-          final qrCodeImageUrl = await Api().storage.uploadBytes(
-            qrBytes,
-            'qrcodes/${event.id}_qr.png',
-          );
-
-          await Api().events.updateEvent(event.copyWith(qrCodeImageUrl: qrCodeImageUrl));
+          final qrCodeImageUrl = await generateQrCode(event);
+          return Api().events.updateEvent(event.copyWith(qrCodeImageUrl: qrCodeImageUrl));
         }
 
         _pageController.animateToPage(

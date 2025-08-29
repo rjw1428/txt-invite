@@ -9,7 +9,9 @@ import 'package:txt_invite/src/ui/screens/add_edit_guest_screen.dart';
 import 'package:txt_invite/src/ui/widgets/cancel_event_dialog.dart';
 import 'package:go_router/go_router.dart';
 import 'package:txt_invite/src/utils/constants.dart';
+import 'package:txt_invite/src/utils/functions.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:txt_invite/src/ui/widgets/create_event_steps/event_settings_step.dart';
 
 class EventCard extends StatefulWidget {
   final Event event;
@@ -99,6 +101,52 @@ class _EventCardState extends State<EventCard> {
               });
             }
           }
+        } else if (value == 'edit_event_settings') {
+          showDialog(
+            context: context,
+            builder: (context) {
+              final formKey = GlobalKey<FormState>();
+              return StatefulBuilder(
+                builder: (context, setState) {
+                  return AlertDialog(
+                    title: const Text('Edit Event Settings'),
+                    content: EventSettingsStep(
+                      formKey: formKey,
+                      settings: event.settings,
+                      onSettingsChanged: (settings) {
+                        setState(() {
+                            event = event.copyWith(settings: settings);
+                          });
+                      },
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            event = widget.event;
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          final createQrCode = event.settings.qrCodeEnabled && !widget.event.settings.qrCodeEnabled;
+                          final qrCodeUrl = createQrCode ? await generateQrCode(event) : null;
+                          final updatedEvent = event.copyWith(settings: event.settings, qrCodeImageUrl: qrCodeUrl);
+                          await Api().events.updateEvent(updatedEvent);
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Save'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          );
+        } else if (value == 'edit_event') {
+          // Shows the Event flow, then the invitation, then confirmation
         } else if (value == 'cancel_event') {
           showDialog(
             context: context,
@@ -151,6 +199,14 @@ class _EventCardState extends State<EventCard> {
             const PopupMenuItem<String>(
               value: 'add_guest',
               child: Text('Add Guest'),
+            ),
+            const PopupMenuItem<String>(
+              value: 'edit_event_settings',
+              child: Text('Edit Event Settings'),
+            ),
+            const PopupMenuItem<String>(
+              value: 'edit_invitation',
+              child: Text('Edit Invitation'),
             ),
             const PopupMenuItem<String>(
               value: 'cancel_event',

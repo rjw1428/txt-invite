@@ -218,7 +218,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             style: const TextStyle(fontSize: 14),
                           ),
                           const SizedBox(height: 16),
-                          if (!kIsWeb)
+                          if (!kIsWeb && event.endTime.toLocal().isAfter(DateTime.now()))
                             ElevatedButton(
                               onPressed: () {
                                 final calEvent = add2calendar.Event(
@@ -235,7 +235,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               child: const Text('Add to Calendar'),
                             ),
                           const SizedBox(height: 16),
-                          if (event.qrCodeImageUrl != null) ...[
+                          if (event.qrCodeImageUrl != null && event.settings.qrCodeEnabled) ...[
                             const Text(
                               'QR Code:',
                               style: TextStyle(
