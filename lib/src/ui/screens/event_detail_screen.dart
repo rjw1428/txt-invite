@@ -165,7 +165,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Image.network(
-                      event.invitationBackground,
+                      event.invitationImageThumbnailUrl,
                       width: 800,
                       height: 600,
                       fit: BoxFit.cover,

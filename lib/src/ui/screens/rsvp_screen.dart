@@ -119,7 +119,7 @@ class _RsvpScreenState extends State<RsvpScreen> {
               children: [
                 Center(
                   child: Image.network(
-                    event.invitationBackground,
+                    event.invitationImageThumbnailUrl,
                     width: 400,
                     height: 300,
                     fit: BoxFit.cover,
