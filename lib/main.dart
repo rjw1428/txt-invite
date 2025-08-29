@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/services/firebase/firebase_auth_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_event_service.dart';
@@ -117,6 +118,7 @@ final _router = GoRouter(
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );

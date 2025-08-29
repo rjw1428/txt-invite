@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:add_2_calendar/add_2_calendar.dart' as add2calendar;
 import 'package:txt_invite/src/services/api.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final String eventId;
@@ -26,11 +27,36 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   late Future<Event> _eventFuture;
   late Future<List<Guest>> _guestListFuture;
   final _commentController = TextEditingController();
+  late BannerAd? _ad;
+
+  // final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+  //   MediaQuery.sizeOf(context).width.truncate(),
+  // );
 
   @override
   void initState() {
     super.initState();
     _eventFuture = _fetchEvent();
+    _ad = BannerAd(
+      adUnitId: BANNER_AD_UNIT_ID,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          print('Ad loaded.');
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          print('Ad failed to load: $error');
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _ad?.dispose();
+    super.dispose();
   }
 
   Future<Event> _fetchEvent() async {
@@ -159,125 +185,139 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             return const Center(child: Text('Event not found.'));
           } else {
             final event = eventSnapshot.data!;
-            return SingleChildScrollView(
-              child: Center(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Image.network(
-                      event.invitationImageThumbnailUrl,
-                      width: 800,
-                      height: 600,
-                      fit: BoxFit.cover,
+            return Column(
+              children: [
+                if (_ad != null)
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: SafeArea(
+                      child: SizedBox(
+                        width: _ad!.size.width.toDouble(),
+                        height: _ad!.size.height.toDouble(),
+                        child: AdWidget(ad: _ad!),
+                      ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
+  ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Center(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SelectableText(
-                            event.title,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Image.network(
+                            event.invitationImageThumbnailUrl,
+                            width: 800,
+                            height: 600,
+                            fit: BoxFit.cover,
                           ),
-                          if (event.location != null)
-                            SelectableLinkify(
-                              text: 'Location: ${event.location}',
-                              onOpen: (link) async {
-                                if (await canLaunchUrl(Uri.parse(link.url))) {
-                                  await launchUrl(Uri.parse(link.url));
-                                } else {
-                                  print('Could not launch ${link.url}');
-                                }
-                              },
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              linkStyle: const TextStyle(color: Colors.blue),
-                            ),
-                          const SizedBox(height: 8),
-                          SelectableLinkify(
-                            onOpen: (link) async {
-                              if (await canLaunchUrl(Uri.parse(link.url))) {
-                                await launchUrl(Uri.parse(link.url));
-                              } else {
-                                print('Could not launch ${link.url}');
-                              }
-                            },
-                            text: event.description,
-                            style: const TextStyle(fontSize: 16),
-                            linkStyle: const TextStyle(color: Colors.blue),
-                          ),
-                          const SizedBox(height: 16),
-                          SelectableText(
-                            'Starts: ${dateTimeFormat.format(event.startTime.toLocal())}',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          SelectableText(
-                            'Ends: ${dateTimeFormat.format(event.endTime.toLocal())}',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          const SizedBox(height: 16),
-                          if (!kIsWeb && event.endTime.toLocal().isAfter(DateTime.now()))
-                            ElevatedButton(
-                              onPressed: () {
-                                final calEvent = add2calendar.Event(
-                                  title: event.title,
-                                  description: event.description,
-                                  location: event.location ?? '',
-                                  startDate: event.startTime,
-                                  endDate: event.endTime,
-                                );
-                                add2calendar.Add2Calendar.addEvent2Cal(
-                                  calEvent,
-                                );
-                              },
-                              child: const Text('Add to Calendar'),
-                            ),
-                          const SizedBox(height: 16),
-                          if (event.qrCodeImageUrl != null && event.settings.qrCodeEnabled) ...[
-                            const Text(
-                              'QR Code:',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Image.network(
-                              event.qrCodeImageUrl!,
-                              width: 200,
-                              height: 200,
-                            ),
-                            if (Api().auth.currentUser != null)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: ElevatedButton(
-                                  onPressed: () async {
-                                    final uri = Uri.parse(
-                                      event.qrCodeImageUrl!,
-                                    );
-                                    if (await canLaunchUrl(uri)) {
-                                      await launchUrl(uri);
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SelectableText(
+                                  event.title,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (event.location != null)
+                                  SelectableLinkify(
+                                    text: 'Location: ${event.location}',
+                                    onOpen: (link) async {
+                                      if (await canLaunchUrl(Uri.parse(link.url))) {
+                                        await launchUrl(Uri.parse(link.url));
+                                      } else {
+                                        print('Could not launch ${link.url}');
+                                      }
+                                    },
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    linkStyle: const TextStyle(color: Colors.blue),
+                                  ),
+                                const SizedBox(height: 8),
+                                SelectableLinkify(
+                                  onOpen: (link) async {
+                                    if (await canLaunchUrl(Uri.parse(link.url))) {
+                                      await launchUrl(Uri.parse(link.url));
                                     } else {
-                                      throw 'Could not launch $uri';
+                                      print('Could not launch ${link.url}');
                                     }
                                   },
-                                  child: const Text('Download'),
+                                  text: event.description,
+                                  style: const TextStyle(fontSize: 16),
+                                  linkStyle: const TextStyle(color: Colors.blue),
                                 ),
-                              ),
-                            const SizedBox(height: 16),
-                          ],
-                          if (event.settings.guestListVisible) ...[
-                            const Text(
-                              'Guests:',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                                const SizedBox(height: 16),
+                                SelectableText(
+                                  'Starts: ${dateTimeFormat.format(event.startTime.toLocal())}',
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                                SelectableText(
+                                  'Ends: ${dateTimeFormat.format(event.endTime.toLocal())}',
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                                const SizedBox(height: 16),
+                                if (!kIsWeb && event.endTime.toLocal().isAfter(DateTime.now()))
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      final calEvent = add2calendar.Event(
+                                        title: event.title,
+                                        description: event.description,
+                                        location: event.location ?? '',
+                                        startDate: event.startTime,
+                                        endDate: event.endTime,
+                                      );
+                                      add2calendar.Add2Calendar.addEvent2Cal(
+                                        calEvent,
+                                      );
+                                    },
+                                    child: const Text('Add to Calendar'),
+                                  ),
+                                const SizedBox(height: 16),
+                                if (event.qrCodeImageUrl != null && event.settings.qrCodeEnabled) ...[
+                                  const Text(
+                                    'QR Code:',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Image.network(
+                                    event.qrCodeImageUrl!,
+                                    width: 200,
+                                    height: 200,
+                                  ),
+                                  if (Api().auth.currentUser != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 8.0),
+                                      child: ElevatedButton(
+                                        onPressed: () async {
+                                          final uri = Uri.parse(
+                                            event.qrCodeImageUrl!,
+                                          );
+                                          if (await canLaunchUrl(uri)) {
+                                            await launchUrl(uri);
+                                          } else {
+                                            throw 'Could not launch $uri';
+                                          }
+                                        },
+                                        child: const Text('Download'),
+                                      ),
+                                    ),
+                                  const SizedBox(height: 16),
+                                ],
+                                if (event.settings.guestListVisible) ...[
+                                  const Text(
+                                    'Guests:',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
 
-                            FutureBuilder<List<Guest>>(
+                                  FutureBuilder<List<Guest>>(
                               future: _guestListFuture,
                               builder: (context, guestListSnapshot) {
                                 if (guestListSnapshot.connectionState ==
@@ -356,17 +396,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 }
                               },
                             ),
-                            const SizedBox(height: 16),
-                          ],
-                          if (event.settings.allowComments) ...[
-                            const Text(
-                              'Comments:',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            StreamBuilder<List<Comment>>(
+                                  const SizedBox(height: 16),
+                                ],
+                                if (event.settings.allowComments) ...[
+                                  const Text(
+                                    'Comments:',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  StreamBuilder<List<Comment>>(
                               stream: Api().comments.getComments(
                                 widget.eventId,
                               ),
@@ -435,30 +475,34 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 }
                               },
                             ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _commentController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Add a comment',
-                                    ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _commentController,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Add a comment',
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.send),
+                                        onPressed: _addComment,
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.send),
-                                  onPressed: _addComment,
-                                ),
+                                ],
                               ],
                             ),
-                          ],
+                          ),
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+
+              ],
             );
           }
         },
