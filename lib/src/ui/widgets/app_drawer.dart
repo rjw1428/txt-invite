@@ -34,14 +34,7 @@ class AppDrawer extends StatelessWidget {
                     ),
                   ),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.history),
-                  title: const Text('Event History'),
-                  onTap: () {
-                    context.go('/event-history');
-                    Navigator.pop(context);
-                  },
-                ),
+                
                 ListTile(
                   leading: const Icon(Icons.people),
                   title: const Text('Manage Guest Lists'),

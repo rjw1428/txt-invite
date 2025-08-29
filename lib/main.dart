@@ -13,7 +13,6 @@ import 'package:txt_invite/src/services/firebase/firebase_comment_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_notification_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_template_service.dart';
 import 'package:txt_invite/src/services/telephony_service.dart';
-import 'package:txt_invite/src/ui/screens/event_history_screen.dart';
 import 'package:txt_invite/src/ui/screens/guest_list_screen.dart';
 import 'package:txt_invite/src/ui/screens/rsvp_screen.dart';
 import 'package:url_strategy/url_strategy.dart';
@@ -82,10 +81,6 @@ final _router = GoRouter(
     GoRoute(
       path: '/guest-lists',
       builder: (context, state) => const GuestListScreen(),
-    ),
-    GoRoute(
-      path: '/event-history',
-      builder: (context, state) => const EventHistoryScreen(),
     ),
   ],
   redirect: (context, state) {

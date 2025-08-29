@@ -15,6 +15,7 @@ import 'package:txt_invite/src/ui/widgets/create_event_steps/guest_list_manageme
 import 'package:txt_invite/src/ui/widgets/create_event_steps/invitation_customization_step.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/sms_status_step.dart';
 import 'package:txt_invite/src/ui/widgets/create_event_steps/template_selection_step.dart';
+import 'package:txt_invite/src/ui/widgets/progress_bar.dart';
 import 'package:txt_invite/src/utils/constants.dart';
 import 'package:txt_invite/src/utils/functions.dart';
 
@@ -213,6 +214,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         children: [
           Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 8.0),
+                child: AnimatedProgressbar(
+                  value: (_currentPage.index + 1) / CreateEventSteps.values.length,
+                  height: 6,
+                  backgroundColor: Colors.grey[300],
+                ),
+              ),
               Expanded(
                 child: PageView(
                   controller: _pageController,
