@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/event_status.dart';
@@ -59,6 +61,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   bool _isLoading = false;
   Uint8List? _invitationImage;
   bool _isTakingScreenshot = false;
+  RewardedAd? _ad;
 
   @override
   void dispose() {
@@ -72,6 +75,56 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   @override
   void initState() {
     super.initState();
+    _createRewardedAd();
+  }
+
+  void _createRewardedAd() {
+    if (!kIsWeb) {
+      RewardedAd.load(
+        adUnitId: REWARD_AD_UNIT_ID,
+        request: const AdRequest(),
+        rewardedAdLoadCallback: RewardedAdLoadCallback(
+          onAdLoaded: (Ad ad) {
+            print('Ad loaded.');
+            _ad = ad as RewardedAd;
+          },
+          onAdFailedToLoad: (LoadAdError error) {
+            print('Ad failed to load: $error');
+            _ad = null;
+          },
+        ),
+      );
+    } else {
+      _ad = null;
+    }
+  }
+
+  void _showRewardedAd() {
+    if (_ad == null) {
+      print('Warning: attempt to show rewarded before loaded.');
+      return;
+    }
+    _ad!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (RewardedAd ad) =>
+          print('ad onAdShowedFullScreenContent.'),
+      onAdDismissedFullScreenContent: (RewardedAd ad) {
+        print('$ad onAdDismissedFullScreenContent.');
+        ad.dispose();
+        _createRewardedAd();
+      },
+      onAdFailedToShowFullScreenContent: (RewardedAd ad, AdError error) {
+        print('$ad onAdFailedToShowFullScreenContent: $error');
+        ad.dispose();
+        _createRewardedAd();
+      },
+    );
+
+    _ad!.setImmersiveMode(true);
+    _ad!.show(
+        onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+      print('$ad with reward $RewardItem(${reward.amount}, ${reward.type})');
+    });
+    _ad = null;
   }
 
   void _nextPage(CreateEventSteps nextStep) async {
@@ -143,6 +196,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       setState(() {
         _isLoading = true;
       });
+      _showRewardedAd();
       try {
         final user = Api().auth.currentUser;
         final profile = await Api().auth.getUserProfile(user!.id);
@@ -376,7 +430,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                               CreateEventSteps.values[CreateEventSteps.values
                                       .indexOf(_currentPage) +
                                   1];
-                          print('nextStep: $nextStep');
                           _nextPage(nextStep);
                         },
                         child: const Text('Next'),
