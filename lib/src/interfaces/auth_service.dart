@@ -5,6 +5,7 @@ import '../models/user.dart';
 
 abstract class AuthService {
   User? get currentUser;
+  Future<Profile?> getUserProfile(String userId);
   Future<User?> signIn(String email, String password);
   Future<User?> signUp(String email, String password);
   Future<void> createProfile(String userId, Profile profile);

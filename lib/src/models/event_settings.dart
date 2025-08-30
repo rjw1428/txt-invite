@@ -4,12 +4,14 @@ class EventSettings {
   final bool guestListVisible;
   final bool rsvpRequired;
   final bool qrCodeEnabled;
+  final bool disableBannerAds;
 
   EventSettings({
     this.allowComments = true,
     this.guestListVisible = true,
     this.rsvpRequired = true,
     this.qrCodeEnabled = false,
+    this.disableBannerAds = false,
   });
 
   EventSettings copyWith({
@@ -17,12 +19,14 @@ class EventSettings {
     bool? guestListVisible,
     bool? rsvpRequired,
     bool? qrCodeEnabled,
+    bool? disableBannerAds,
   }) {
     return EventSettings(
       allowComments: allowComments ?? this.allowComments,
       guestListVisible: guestListVisible ?? this.guestListVisible,
       rsvpRequired: rsvpRequired ?? this.rsvpRequired,
       qrCodeEnabled: qrCodeEnabled ?? this.qrCodeEnabled,
+      disableBannerAds: disableBannerAds ?? this.disableBannerAds,
     );
   }
 
@@ -32,6 +36,7 @@ class EventSettings {
       guestListVisible: map['guestListVisible'] ?? true,
       rsvpRequired: map['rsvpRequired'] ?? true,
       qrCodeEnabled: map['qrCodeEnabled'] ?? false,
+      disableBannerAds: map['disableBannerAds'] ?? false,
     );
   }
 
@@ -41,6 +46,7 @@ class EventSettings {
       'guestListVisible': guestListVisible,
       'rsvpRequired': rsvpRequired,
       'qrCodeEnabled': qrCodeEnabled,
+      'disableBannerAds': disableBannerAds,
     };
   }
 }

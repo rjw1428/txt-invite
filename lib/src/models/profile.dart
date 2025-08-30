@@ -4,6 +4,7 @@ class Profile {
   final String email;
   final String phoneNumber;
   final String? fcmToken;
+  final String role;
 
   Profile({
     required this.firstName,
@@ -11,6 +12,7 @@ class Profile {
     required this.email,
     required this.phoneNumber,
     required this.fcmToken,
+    required this.role,
   });
 
   Map<String, dynamic> toMap() {
@@ -20,6 +22,7 @@ class Profile {
       'email': email,
       'phoneNumber': phoneNumber,
       'fcmToken': fcmToken,
+      'role': role,
     };
   }
 
@@ -30,6 +33,7 @@ class Profile {
       email: map['email'],
       phoneNumber: map['phoneNumber'],
       fcmToken: map['fcmToken'],
+      role: map['role'],
     );
   }
 }

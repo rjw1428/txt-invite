@@ -90,6 +90,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           email: _emailController.text,
           phoneNumber: _phoneNumberController.text,
           fcmToken: fcmToken,
+          role: 'user',
         );
         await Api().auth.createProfile(_userId!, profile);
         GoRouter.of(context).go('/dashboard');

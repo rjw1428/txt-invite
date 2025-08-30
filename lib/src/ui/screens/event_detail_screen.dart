@@ -96,12 +96,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   Future<void> _addComment() async {
     if (_commentController.text.isNotEmpty) {
-      String author = 'Event Host'; //Api().auth.currentUser?.displayName ??
-      if (widget.guestId != null) {
-        final guestList = await _guestListFuture;
-        if (guestList.isNotEmpty) {
-          final guest = guestList.firstWhere((g) => g.id == widget.guestId);
-          author = '${guest.firstName} ${guest.lastName}';
+      String author = 'Unknown User';
+      if (Api().auth.currentUser != null) {
+        print(Api().auth.currentUser!.id);
+        final profile = await Api().auth.getUserProfile(Api().auth.currentUser!.id);
+        author = profile != null ? '${profile.firstName} ${profile.lastName}' : 'Event Host';
+      } else {
+        if (widget.guestId != null) {
+          final guestList = await _guestListFuture;
+          if (guestList.isNotEmpty) {
+            final guest = guestList.firstWhere((g) => g.id == widget.guestId);
+            author = '${guest.firstName} ${guest.lastName}';
+          }
         }
       }
       final comment = Comment(
@@ -187,7 +193,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             final event = eventSnapshot.data!;
             return Column(
               children: [
-                if (_ad != null)
+                if (_ad != null || event.settings.disableBannerAds)
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: SafeArea(
@@ -197,7 +203,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         child: AdWidget(ad: _ad!),
                       ),
                     ),
-  ),
+                ),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Center(
@@ -308,6 +314,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     ),
                                   const SizedBox(height: 16),
                                 ],
+                                Text(
+                                  'Created By:',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(event.createdByName),
+                                const SizedBox(height: 16),
                                 if (event.settings.guestListVisible) ...[
                                   const Text(
                                     'Guests:',

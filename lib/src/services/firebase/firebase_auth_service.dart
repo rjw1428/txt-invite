@@ -61,4 +61,17 @@ class FirebaseAuthService implements AuthService {
         print('Error creating profile: $e');
       }
     }
+
+    @override
+    Future<Profile?> getUserProfile(String userId) async {
+      try {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+        if (doc.exists) {
+          return Profile.fromMap(doc.data()!);
+        }
+      } catch (e) {
+        print('Error fetching user profile: $e');
+      }
+      return null;
+    }
 }

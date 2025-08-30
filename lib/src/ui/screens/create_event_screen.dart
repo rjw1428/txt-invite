@@ -145,18 +145,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       });
       try {
         final user = Api().auth.currentUser;
+        final profile = await Api().auth.getUserProfile(user!.id);
+        String? createdByName = "${profile!.firstName} ${profile.lastName}";
         String? imgUrl = _selectedTemplate!.backgroundImage;
         if (_selectedTemplate!.backgroundImage.startsWith('/')) {
           final testFilePath = _selectedTemplate!.backgroundImage;
           final file = File(testFilePath);
           imgUrl = await Api().storage.uploadFile(
             file,
-            'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}_background.png',
+            'invitations/${user.id}_${DateTime.now().millisecondsSinceEpoch}_background.png',
           );
         }
         final invitationThumbnailImageUrl = await Api().storage.uploadBytes(
           _invitationImage!,
-          'invitations/${user!.id}_${DateTime.now().millisecondsSinceEpoch}_preview.png',
+          'invitations/${user.id}_${DateTime.now().millisecondsSinceEpoch}_preview.png',
         );
         final newEvent = Event(
           id: '',
@@ -168,6 +170,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           invitationBackground: imgUrl,
           invitationImageThumbnailUrl: invitationThumbnailImageUrl,
           createdBy: user.id,
+          createdByName: createdByName,
           status: EventStatus.active,
           inviteCount: _selectedGuestList.length,
           settings: _eventSettings,

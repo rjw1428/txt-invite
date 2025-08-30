@@ -14,6 +14,7 @@ class Event {
   final String invitationBackground;
   final String invitationImageThumbnailUrl;
   final String createdBy;
+  final String createdByName;
   final int attendingCount;
   final int notAttendingCount;
   final int maybeCount;
@@ -33,6 +34,7 @@ class Event {
     required this.invitationBackground,
     required this.invitationImageThumbnailUrl,
     required this.createdBy,
+    required this.createdByName,
     required this.settings,
     this.attendingCount = 0,
     this.notAttendingCount = 0,
@@ -63,6 +65,7 @@ class Event {
     String? invitationBackground,
     String? invitationImageThumbnailUrl,
     String? createdBy,
+    String? createdByName,
     int? attendingCount,
     int? notAttendingCount,
     int? maybeCount,
@@ -82,6 +85,7 @@ class Event {
       invitationBackground: invitationBackground ?? this.invitationBackground,
       invitationImageThumbnailUrl: invitationImageThumbnailUrl ?? this.invitationImageThumbnailUrl,
       createdBy: createdBy ?? this.createdBy,
+      createdByName: createdByName ?? this.createdByName,
       attendingCount: attendingCount ?? this.attendingCount,
       notAttendingCount: notAttendingCount ?? this.notAttendingCount,
       maybeCount: maybeCount ?? this.maybeCount,
@@ -104,6 +108,7 @@ class Event {
       invitationBackground: map['invitationBackground'],
       invitationImageThumbnailUrl: map['invitationImageThumbnailUrl'],
       createdBy: map['createdBy'],
+      createdByName: map['createdByName'],
       attendingCount: map['attendingCount'] ?? 0,
       notAttendingCount: map['notAttendingCount'] ?? 0,
       maybeCount: map['maybeCount'] ?? 0,
@@ -127,6 +132,7 @@ class Event {
       'qrCodeImageUrl': qrCodeImageUrl,
       'location': location,
       'createdBy': createdBy,
+      'createdByName': createdByName,
       'attendingCount': attendingCount,
       'notAttendingCount': notAttendingCount,
       'maybeCount': maybeCount,

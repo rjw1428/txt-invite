@@ -232,7 +232,11 @@ class _PastEventsListState extends State<_PastEventsList> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final event = _events[index];
-                return EventCard(event: event, onUpdate: _refreshEvents);
+                return EventCard(
+                  event: event,
+                  limitedActionMenu: true,
+                  onUpdate: _refreshEvents,
+                );
               },
             ),
     );

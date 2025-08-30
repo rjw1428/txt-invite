@@ -15,13 +15,13 @@ import 'package:txt_invite/src/ui/widgets/create_event_steps/event_settings_step
 
 class EventCard extends StatefulWidget {
   final Event event;
-  final bool showActionMenu;
+  final bool limitedActionMenu;
   final VoidCallback onUpdate;
 
   const EventCard({
     super.key,
     required this.event,
-    this.showActionMenu = true,
+    this.limitedActionMenu = true,
     required this.onUpdate,
   });
 
@@ -38,7 +38,7 @@ class _EventCardState extends State<EventCard> {
     event = widget.event;
   }
 
-  Widget actionMenu(BuildContext contesxt) {
+  Widget actionMenu(BuildContext context, {required bool limited}) {
     return PopupMenuButton<String>(
       onSelected: (value) async {
         if (value == 'add_guest') {
@@ -196,22 +196,25 @@ class _EventCardState extends State<EventCard> {
       },
       itemBuilder:
           (BuildContext context) => <PopupMenuEntry<String>>[
-            const PopupMenuItem<String>(
-              value: 'add_guest',
-              child: Text('Add Guest'),
-            ),
+            if (!limited)
+              const PopupMenuItem<String>(
+                value: 'add_guest',
+                child: Text('Add Guest'),
+              ),
             const PopupMenuItem<String>(
               value: 'edit_event_settings',
               child: Text('Edit Event Settings'),
             ),
-            const PopupMenuItem<String>(
-              value: 'edit_invitation',
-              child: Text('Edit Invitation'),
-            ),
-            const PopupMenuItem<String>(
-              value: 'cancel_event',
-              child: Text('Cancel Event'),
-            ),
+            if (!limited)
+              const PopupMenuItem<String>(
+                value: 'edit_invitation',
+                child: Text('Edit Invitation'),
+              ),
+            if (!limited)
+              const PopupMenuItem<String>(
+                value: 'cancel_event',
+                child: Text('Cancel Event'),
+              ),
             const PopupMenuItem<String>(
               value: 'delete_event',
               child: Text('Delete Event'),
@@ -240,7 +243,7 @@ class _EventCardState extends State<EventCard> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              if (widget.showActionMenu) actionMenu(context),
+              actionMenu(context, limited: widget.limitedActionMenu),
             ],
           ),
           subtitle: Column(
