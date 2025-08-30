@@ -34,33 +34,8 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         context.go('/dashboard');
       } catch (e) {
-        // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login failed: $e')),
-        );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _signUp() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-      try {
-        await Api().auth.signUp(
-          _emailController.text,
-          _passwordController.text,
-        );
-        context.go('/dashboard');
-      } catch (e) {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign up failed: $e')),
         );
       } finally {
         setState(() {
@@ -120,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: const Text('Login'),
                         ),
                         TextButton(
-                          onPressed: _signUp,
+                          onPressed: () => GoRouter.of(context).go('/signup'),
                           child: const Text('Create Account'),
                         ),
                       ],

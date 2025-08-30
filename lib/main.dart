@@ -13,8 +13,10 @@ import 'package:txt_invite/src/services/firebase/firebase_comment_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_notification_service.dart';
 import 'package:txt_invite/src/services/firebase/firebase_template_service.dart';
 import 'package:txt_invite/src/services/telephony_service.dart';
+import 'package:txt_invite/src/ui/screens/create_account_screen.dart';
 import 'package:txt_invite/src/ui/screens/guest_list_screen.dart';
 import 'package:txt_invite/src/ui/screens/rsvp_screen.dart';
+import 'package:txt_invite/src/utils/constants.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'firebase_options.dart';
 import 'package:txt_invite/src/ui/screens/dashboard_screen.dart';
@@ -48,6 +50,10 @@ final _router = GoRouter(
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (context, state) => const CreateAccountScreen(),
     ),
     GoRoute(
       path: '/dashboard',
@@ -88,6 +94,11 @@ final _router = GoRouter(
     final loggingIn = state.matchedLocation == '/login';
     final atRoot = state.matchedLocation == '/';
     final atDashboard = state.matchedLocation == '/dashboard';
+    final atSignup = state.matchedLocation == '/signup';
+
+    if (atSignup) {
+      return '/signup';
+    }
 
     if (kIsWeb) {
       if (!loggedIn && (loggingIn || atDashboard)) {
@@ -130,8 +141,7 @@ void main() async {
   );
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  await Api().notifications.init();
+  Api().notifications.handleForegroundMessage();
 
   setPathUrlStrategy();
   runApp(const MyApp());
@@ -143,7 +153,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Txt-Invite',
+      title: APP_TITLE,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,

@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:txt_invite/src/interfaces/auth_service.dart';
+import 'package:txt_invite/src/models/profile.dart';
 import 'package:txt_invite/src/models/user.dart';
 
 class FirebaseAuthService implements AuthService {
@@ -49,5 +51,14 @@ class FirebaseAuthService implements AuthService {
         password: password,
       );
       return _userFromFirebase(credential.user);
+    }
+
+    @override
+    Future<void> createProfile(String userId, Profile profile) async {
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(userId).set(profile.toMap());
+      } catch (e) {
+        print('Error creating profile: $e');
+      }
     }
 }
