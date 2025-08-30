@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:txt_invite/src/models/event.dart';
@@ -442,7 +443,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     else if (_currentPage == CreateEventSteps.smsStatus)
                       ElevatedButton(
                         onPressed: () {
-                          Navigator.of(context).pop();
+                          GoRouter.of(context).go('/dashboard');
                         },
                         child: const Text('Done'),
                       ),

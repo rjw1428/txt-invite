@@ -21,7 +21,7 @@ class EventCard extends StatefulWidget {
   const EventCard({
     super.key,
     required this.event,
-    this.limitedActionMenu = true,
+    this.limitedActionMenu = false,
     required this.onUpdate,
   });
 

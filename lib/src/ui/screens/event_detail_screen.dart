@@ -198,7 +198,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             final event = eventSnapshot.data!;
             return Column(
               children: [
-                if (_ad != null || event.settings.disableBannerAds)
+                if (_ad != null && !event.settings.disableBannerAds)
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: SafeArea(
