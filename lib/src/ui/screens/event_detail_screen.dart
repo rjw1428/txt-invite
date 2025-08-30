@@ -6,6 +6,7 @@ import 'package:txt_invite/src/models/comment.dart';
 import 'package:txt_invite/src/models/event.dart';
 import 'package:txt_invite/src/models/guest.dart';
 import 'package:txt_invite/src/models/rsvp.dart';
+import 'package:txt_invite/src/ui/widgets/promo_footer.dart';
 import 'package:txt_invite/src/utils/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
@@ -37,20 +38,24 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   void initState() {
     super.initState();
     _eventFuture = _fetchEvent();
-    _ad = BannerAd(
-      adUnitId: BANNER_AD_UNIT_ID,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (Ad ad) {
-          print('Ad loaded.');
-        },
-        onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          print('Ad failed to load: $error');
-          ad.dispose();
-        },
-      ),
-    )..load();
+    if (!kIsWeb) {
+      _ad = BannerAd(
+        adUnitId: BANNER_AD_UNIT_ID,
+        size: AdSize.banner,
+        request: const AdRequest(),
+        listener: BannerAdListener(
+          onAdLoaded: (Ad ad) {
+            print('Ad loaded.');
+          },
+          onAdFailedToLoad: (Ad ad, LoadAdError error) {
+            print('Ad failed to load: $error');
+            ad.dispose();
+          },
+        ),
+      )..load();
+    } else {
+      _ad = null;
+    }
   }
 
   @override
@@ -203,7 +208,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         child: AdWidget(ad: _ad!),
                       ),
                     ),
-                ),
+                  ),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Center(
@@ -232,19 +237,24 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   SelectableLinkify(
                                     text: 'Location: ${event.location}',
                                     onOpen: (link) async {
-                                      if (await canLaunchUrl(Uri.parse(link.url))) {
+                                      if (await canLaunchUrl(
+                                          Uri.parse(link.url))) {
                                         await launchUrl(Uri.parse(link.url));
                                       } else {
                                         print('Could not launch ${link.url}');
                                       }
                                     },
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                    linkStyle: const TextStyle(color: Colors.blue),
+                                    style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                    linkStyle:
+                                        const TextStyle(color: Colors.blue),
                                   ),
                                 const SizedBox(height: 8),
                                 SelectableLinkify(
                                   onOpen: (link) async {
-                                    if (await canLaunchUrl(Uri.parse(link.url))) {
+                                    if (await canLaunchUrl(
+                                        Uri.parse(link.url))) {
                                       await launchUrl(Uri.parse(link.url));
                                     } else {
                                       print('Could not launch ${link.url}');
@@ -252,7 +262,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   },
                                   text: event.description,
                                   style: const TextStyle(fontSize: 16),
-                                  linkStyle: const TextStyle(color: Colors.blue),
+                                  linkStyle:
+                                      const TextStyle(color: Colors.blue),
                                 ),
                                 const SizedBox(height: 16),
                                 SelectableText(
@@ -264,7 +275,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   style: const TextStyle(fontSize: 14),
                                 ),
                                 const SizedBox(height: 16),
-                                if (!kIsWeb && event.endTime.toLocal().isAfter(DateTime.now()))
+                                if (!kIsWeb &&
+                                    event.endTime
+                                        .toLocal()
+                                        .isAfter(DateTime.now()))
                                   ElevatedButton(
                                     onPressed: () {
                                       final calEvent = add2calendar.Event(
@@ -281,7 +295,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     child: const Text('Add to Calendar'),
                                   ),
                                 const SizedBox(height: 16),
-                                if (event.qrCodeImageUrl != null && event.settings.qrCodeEnabled) ...[
+                                if (event.qrCodeImageUrl != null &&
+                                    event.settings.qrCodeEnabled) ...[
                                   const Text(
                                     'QR Code:',
                                     style: TextStyle(
@@ -297,7 +312,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   ),
                                   if (Api().auth.currentUser != null)
                                     Padding(
-                                      padding: const EdgeInsets.only(left: 8.0),
+                                      padding:
+                                          const EdgeInsets.only(left: 8.0),
                                       child: ElevatedButton(
                                         onPressed: () async {
                                           final uri = Uri.parse(
@@ -331,55 +347,64 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-
                                   FutureBuilder<List<Guest>>(
-                              future: _guestListFuture,
-                              builder: (context, guestListSnapshot) {
-                                if (guestListSnapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const Center(
-                                    child: CircularProgressIndicator(),
-                                  );
-                                } else if (guestListSnapshot.hasError) {
-                                  return Center(
-                                    child: Text(
-                                      'Error: ${guestListSnapshot.error}',
-                                    ),
-                                  );
-                                } else if (!guestListSnapshot.hasData ||
-                                    guestListSnapshot.data!.isEmpty) {
-                                  return const Text('No guests invited.');
-                                } else {
-                                  final guestList = guestListSnapshot.data!;
-                                  return event.settings.rsvpRequired
-                                      ? Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children:
-                                            guestList.map((guest) {
-                                              if (guest.id == widget.guestId) {
-                                                return Row(
-                                                  children: [
-                                                    Text(
-                                                      '- ${guest.firstName} ${guest.lastName}',
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    DropdownButton<RsvpStatus>(
-                                                      value: guest.rsvp!.status,
-                                                      onChanged: (newStatus) {
-                                                        if (newStatus != null) {
-                                                          _showRsvpConfirmationDialog(
-                                                            newStatus,
-                                                          );
-                                                        }
-                                                      },
-                                                      items:
-                                                          RsvpStatus.values
+                                    future: _guestListFuture,
+                                    builder: (context, guestListSnapshot) {
+                                      if (guestListSnapshot
+                                              .connectionState ==
+                                          ConnectionState.waiting) {
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      } else if (guestListSnapshot.hasError) {
+                                        return Center(
+                                          child: Text(
+                                            'Error: ${guestListSnapshot.error}',
+                                          ),
+                                        );
+                                      } else if (!guestListSnapshot.hasData ||
+                                          guestListSnapshot.data!.isEmpty) {
+                                        return const Text(
+                                            'No guests invited.');
+                                      } else {
+                                        final guestList =
+                                            guestListSnapshot.data!;
+                                        return event.settings.rsvpRequired
+                                            ? Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: guestList.map((guest) {
+                                                  if (guest.id ==
+                                                      widget.guestId) {
+                                                    return Row(
+                                                      children: [
+                                                        Text(
+                                                          '- ${guest.firstName} ${guest.lastName}',
+                                                        ),
+                                                        const SizedBox(
+                                                            width: 8),
+                                                        DropdownButton<
+                                                            RsvpStatus>(
+                                                          value: guest
+                                                              .rsvp!.status,
+                                                          onChanged:
+                                                              (newStatus) {
+                                                            if (newStatus !=
+                                                                null) {
+                                                              _showRsvpConfirmationDialog(
+                                                                newStatus,
+                                                              );
+                                                            }
+                                                          },
+                                                          items: RsvpStatus
+                                                              .values
                                                               .map(
                                                                 (
                                                                   status,
-                                                                ) => DropdownMenuItem(
-                                                                  value: status,
+                                                                ) =>
+                                                                    DropdownMenuItem(
+                                                                  value:
+                                                                      status,
                                                                   child: Text(
                                                                     _getRsvpStatusString(
                                                                       status,
@@ -388,29 +413,29 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                                                 ),
                                                               )
                                                               .toList(),
-                                                    ),
-                                                  ],
-                                                );
-                                              } else {
-                                                return Text(
-                                                  '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(guest.rsvp!.status)})',
-                                                );
-                                              }
-                                            }).toList(),
-                                      )
-                                      : Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children:
-                                            guestList.map((guest) {
-                                              return Text(
-                                                '- ${guest.firstName} ${guest.lastName}',
+                                                        ),
+                                                      ],
+                                                    );
+                                                  } else {
+                                                    return Text(
+                                                      '- ${guest.firstName} ${guest.lastName} (${_getRsvpStatusString(guest.rsvp!.status)})',
+                                                    );
+                                                  }
+                                                }).toList(),
+                                              )
+                                            : Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children:
+                                                    guestList.map((guest) {
+                                                  return Text(
+                                                    '- ${guest.firstName} ${guest.lastName}',
+                                                  );
+                                                }).toList(),
                                               );
-                                            }).toList(),
-                                      );
-                                }
-                              },
-                            ),
+                                      }
+                                    },
+                                  ),
                                   const SizedBox(height: 16),
                                 ],
                                 if (event.settings.allowComments) ...[
@@ -422,74 +447,82 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     ),
                                   ),
                                   StreamBuilder<List<Comment>>(
-                              stream: Api().comments.getComments(
-                                widget.eventId,
-                              ),
-                              builder: (context, commentSnapshot) {
-                                if (commentSnapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const Center(
-                                    child: CircularProgressIndicator(),
-                                  );
-                                } else if (commentSnapshot.hasError) {
-                                  return Center(
-                                    child: Text(
-                                      'Error: ${commentSnapshot.error}',
-                                    ),
-                                  );
-                                } else if (!commentSnapshot.hasData ||
-                                    commentSnapshot.data!.isEmpty) {
-                                  return const Text('No comments yet.');
-                                } else {
-                                  final comments = commentSnapshot.data!;
-                                  return ListView.builder(
-                                    shrinkWrap: true,
-                                    itemCount: comments.length,
-                                    itemBuilder: (context, index) {
-                                      final comment = comments[index];
-                                      return Container(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  "${comment.author} - ",
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  dateTimeFormat.format(
-                                                    comment.createdAt.toDate(),
-                                                  ),
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey,
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Text(
-                                              comment.text,
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ],
+                                    stream: Api().comments.getComments(
+                                          widget.eventId,
                                         ),
-                                      );
+                                    builder: (context, commentSnapshot) {
+                                      if (commentSnapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      } else if (commentSnapshot.hasError) {
+                                        return Center(
+                                          child: Text(
+                                            'Error: ${commentSnapshot.error}',
+                                          ),
+                                        );
+                                      } else if (!commentSnapshot.hasData ||
+                                          commentSnapshot.data!.isEmpty) {
+                                        return const Text('No comments yet.');
+                                      } else {
+                                        final comments =
+                                            commentSnapshot.data!;
+                                        return ListView.builder(
+                                          shrinkWrap: true,
+                                          itemCount: comments.length,
+                                          itemBuilder: (context, index) {
+                                            final comment = comments[index];
+                                            return Container(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        "${comment.author} - ",
+                                                        style:
+                                                            const TextStyle(
+                                                          fontSize: 12,
+                                                          fontStyle: FontStyle
+                                                              .italic,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        dateTimeFormat.format(
+                                                          comment.createdAt
+                                                              .toDate(),
+                                                        ),
+                                                        style:
+                                                            const TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.grey,
+                                                          fontStyle: FontStyle
+                                                              .italic,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Text(
+                                                    comment.text,
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      }
                                     },
-                                  );
-                                }
-                              },
-                            ),
+                                  ),
                                   const SizedBox(height: 16),
                                   Row(
                                     children: [
@@ -516,7 +549,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     ),
                   ),
                 ),
-
+                if (Api().auth.currentUser == null) const PromoFooter(),
               ],
             );
           }

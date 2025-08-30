@@ -8,6 +8,8 @@ import 'package:txt_invite/src/services/api.dart';
 import 'package:txt_invite/src/utils/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:txt_invite/src/ui/widgets/promo_footer.dart';
+
 class RsvpScreen extends StatefulWidget {
   final String eventId;
   final String guestId;
@@ -109,126 +111,133 @@ class _RsvpScreenState extends State<RsvpScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('RSVP')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Image.network(
-                    event.invitationImageThumbnailUrl,
-                    width: 400,
-                    height: 300,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                SelectableText(
-                  'Event: ${event.title}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SelectableText('Description: ${event.description}'),
-                if (event.location != null)
-                  SelectableLinkify(
-                    text: 'Location: ${event.location}',
-                    onOpen: (link) async {
-                      if (await canLaunchUrl(Uri.parse(link.url))) {
-                        await launchUrl(Uri.parse(link.url));
-                      } else {
-                        print('Could not launch ${link.url}');
-                      }
-                    },
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    linkStyle: const TextStyle(color: Colors.blue),
-                  ),
-                Text(
-                  'Date: ${dateTimeFormat.format(event.startTime)} - ${dateTimeFormat.format(event.endTime)}',
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Guest: ${guest.firstName} ${guest.lastName}',
-                  style: const TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 16),
-                if (_hasResponded)
-                  Text(
-                    'You have already RSVP\'d: ${RsvpStatus.values.firstWhere((status) => status == _initialStatus).toString().split('.').last}.',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<RsvpStatus>(
-                  value:
-                      _selectedStatus == RsvpStatus.pending
-                          ? null
-                          : _selectedStatus,
-                  decoration: const InputDecoration(
-                    labelText: 'Your RSVP',
-                    border: OutlineInputBorder(),
-                  ),
-                  items:
-                      RsvpStatus.values
-                          .where((status) => status != RsvpStatus.pending)
-                          .map((status) {
-                            return DropdownMenuItem(
-                              value: status,
-                              child: Text(status.toString().split('.').last),
-                            );
-                          })
-                          .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedStatus = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Please select an RSVP status';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      try {
-                        await Api().events.updateRsvp(
-                          eventId: widget.eventId,
-                          guestId: widget.guestId,
-                          status: _selectedStatus!,
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('RSVP submitted successfully!'),
+      body: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Image.network(
+                          event.invitationImageThumbnailUrl,
+                          width: 400,
+                          height: 300,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      SelectableText(
+                        'Event: ${event.title}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SelectableText('Description: ${event.description}'),
+                      if (event.location != null)
+                        SelectableLinkify(
+                          text: 'Location: ${event.location}',
+                          onOpen: (link) async {
+                            if (await canLaunchUrl(Uri.parse(link.url))) {
+                              await launchUrl(Uri.parse(link.url));
+                            } else {
+                              print('Could not launch ${link.url}');
+                            }
+                          },
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
-                        );
-                        GoRouter.of(context).go(
-                          '/events/${widget.eventId}?guestId=${widget.guestId}',
-                        );
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to submit RSVP: $e')),
-                        );
-                      }
-                    }
-                  },
-                  child: Text(_hasResponded ? 'Update RSVP' : 'Submit RSVP'),
+                          linkStyle: const TextStyle(color: Colors.blue),
+                        ),
+                      Text(
+                        'Date: ${dateTimeFormat.format(event.startTime)} - ${dateTimeFormat.format(event.endTime)}',
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Guest: ${guest.firstName} ${guest.lastName}',
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 16),
+                      if (_hasResponded)
+                        Text(
+                          'You have already RSVP\'d: ${RsvpStatus.values.firstWhere((status) => status == _initialStatus).toString().split('.').last}.',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<RsvpStatus>(
+                        value:
+                            _selectedStatus == RsvpStatus.pending
+                                ? null
+                                : _selectedStatus,
+                        decoration: const InputDecoration(
+                          labelText: 'Your RSVP',
+                          border: OutlineInputBorder(),
+                        ),
+                        items:
+                            RsvpStatus.values
+                                .where((status) => status != RsvpStatus.pending)
+                                .map((status) {
+                                  return DropdownMenuItem(
+                                    value: status,
+                                    child: Text(status.toString().split('.').last),
+                                  );
+                                })
+                                .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedStatus = value;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select an RSVP status';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            try {
+                              await Api().events.updateRsvp(
+                                eventId: widget.eventId,
+                                guestId: widget.guestId,
+                                status: _selectedStatus!,
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('RSVP submitted successfully!'),
+                                ),
+                              );
+                              GoRouter.of(context).go(
+                                '/events/${widget.eventId}?guestId=${widget.guestId}',
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to submit RSVP: $e')),
+                              );
+                            }
+                          }
+                        },
+                        child: Text(_hasResponded ? 'Update RSVP' : 'Submit RSVP'),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+          if (Api().auth.currentUser == null) const PromoFooter(),
+        ],
       ),
     );
   }
